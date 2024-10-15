@@ -17,11 +17,12 @@ async function CheckIfUserAreOnLobby(Username, SocketClients) {
 }
 
 
-//Verifica se o utilizador com o numero x é dono de algum lobby
-async function CheckWhoIsTheHoster(IdPlayer, SocketClients) {
+//Verifica se o utilizador com o numero x é dono de algum lobby, retorna os dados!
+async function ReturnDataOfLobbyWherePlayerAreHost(IdPlayer, SocketClients) {
     return SocketClients.NewGame.findIndex(ws => ws.players[0] == idPlayer);
 }
 
+//Verifica se o jogador é hoster ou não, retorna true or false
 async function CheckIfUserAreHoster(idUser, SocketClients) {
     return SocketClients.NewGame.findIndex(ws => ws.players[0] == idPlayer) != -1;
 }
@@ -36,7 +37,7 @@ async function NewIdLobby(SocketClients) {
     return SocketClients.NewGame.length != 0 ? SocketClients.NewGame[SocketClients.NewGame.length - 1].idGame + 1 : 0;
 }
 
-//Retorna o Id do lobby
+//Retorna dados do lobby
 async function ReturnIdOfLobby(SocketClients, idLobby) {
     return SocketClients.NewGame.findIndex(ws => ws.idGame == idLobby);
 }
@@ -107,9 +108,11 @@ async function DisconnectAllPlayersOfLobby(ClientesOnLobby) {
 }
 
 //Desliga um user do lobby
-async function DisconnectOneUser(socket) {
-    var index = await FindSocket(socket, SocketClients);
+async function DisconnectOneUser(socket, SocketClients) {
+    var index = await FindSocket(socket, "", SocketClients);
     if (CheckIfUserAreHoster(index, SocketClients)) {
+        var lobby = await ReturnDataOfLobbyWherePlayerAreHost(index, SocketClients)
+        await DisconnectAllPlayersOfLobby(lobby)
         //TODO: Fechar Servidor, Desconnectar todos os users, Guardar na DATABASE, 
     }
     else {

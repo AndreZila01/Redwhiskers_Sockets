@@ -42,7 +42,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('disconnect', async function () {
-        await FS.DisconnectOneUser(socket);
+        await FS.DisconnectOneUser(socket, SocketClients);
     });
 
     socket.on('CreateLobby', async function (data) {
