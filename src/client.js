@@ -6,6 +6,10 @@ socket.on('news', function (data) {
     console.log('Received news from server:', data);
 });
 
+socket.on('status', function (data) {
+    console.log('Received news from server1:', data);
+});
+
 // Send a 'news' event to the server
 
 async function load()
