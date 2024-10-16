@@ -14,7 +14,7 @@ http.listen(Port, function () {
 });
 
 app.get('/', async function (req, res) {
-    await FS.SendToAllPlayers("Estou vivo", SocketClients);
+    await FS.SendToAllPlayers("Hello World", SocketClients);
 });
 
 let SocketClients = [];
@@ -23,14 +23,16 @@ io.on('connection', function (socket) {
     console.log('a user connected');
 
 
-    socket.on('addSocket', async function (data) {
+    socket.on('NewPlayer', async function (data) {
         data = JSON.parse(data.text);
-        var s = await FS.addSocket(data.Username, socket, SocketClients);
+        var s = await FS.CheckSocketExisted(data.Username, socket, SocketClients);
 
         if (s.length != 0)
             await FS.AddPlayer(s[0], SocketClients);
-        else
+        else {
             await FS.SendMessageToPlayer("Já existe um jogador com esse nome ou ip", socket);
+            socket.dis
+        }
     });
 
     socket.on('Ping', async function (data) {
@@ -54,6 +56,9 @@ io.on('connection', function (socket) {
     socket.on('JoinLobby', async function (data) {
         data = JSON.parse(data.text);
         await FS.JoinLobby(data.Username, data.idLobby, SocketClients);
+    });
 
+    socket.on('StartGameOnLobby', async function (data) {
+        await FS.StartGameOnLobby(JSON.parse(data.text), SocketClients);
     });
 });

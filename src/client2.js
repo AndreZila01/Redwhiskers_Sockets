@@ -14,8 +14,7 @@ socket.on('status', function (data) {
 
 async function load()
 {
-
-    socket.emit('addSocket', { text: '{"Username":"Test2"}' });
+    socket.emit('NewPlayer', { text: '{"Username":"Test2"}' });
     socket.emit('news', { text: 'Hello from the client!' });
     await Promise.resolve(setTimeout(() => { }, 1000));
     socket.emit('CreateLobby', { text: '{"Username":"Test2"}' });
