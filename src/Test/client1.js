@@ -6,7 +6,17 @@ socket.on('news', function (data) {
     console.log('Received news from server:', data);
 });
 
-socket.on('status', function (data) {
+socket.on('status', async function (data) {
+    if(data.content == "startGame")
+    {
+        let a = 0;
+        while(true)
+        {
+            await socket.emit('Ping', { text: `{"Sou Lindo!! SIIIIIM ${a++}"` });
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log("Ping"+a);
+        }
+    }
     console.log('Received news from server1:', data);
 });
 

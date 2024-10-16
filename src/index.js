@@ -17,6 +17,10 @@ app.get('/', async function (req, res) {
     await FS.SendToAllPlayers("Hello World", SocketClients);
 });
 
+app.get('/startGame', async function (req, res) {
+    await FS.SendToAllPlayers("startGame", SocketClients);
+});
+
 let SocketClients = [];
 //SocketClients.NewGame.push({idGame: 1, dateTime: new Date, players: [], active: false});
 io.on('connection', function (socket) {
@@ -31,11 +35,12 @@ io.on('connection', function (socket) {
             await FS.AddPlayer(s[0], SocketClients);
         else {
             await FS.SendMessageToPlayer("Já existe um jogador com esse nome ou ip", socket);
-            socket.dis
+            socket.disconnect();
         }
     });
 
     socket.on('Ping', async function (data) {
+        console.log(data);
         //Enviar data de todos os clientes que estão naquele server
     });
 

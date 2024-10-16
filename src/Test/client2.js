@@ -17,7 +17,7 @@ async function load()
     socket.emit('NewPlayer', { text: '{"Username":"Test2"}' });
     socket.emit('news', { text: 'Hello from the client!' });
     await Promise.resolve(setTimeout(() => { }, 1000));
-    socket.emit('CreateLobby', { text: '{"Username":"Test2"}' });
+    socket.emit('JoinLobby', { text: '{"Username":"Test2", "idLobby":0}' });
 }
 
 load();

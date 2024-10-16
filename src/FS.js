@@ -29,10 +29,11 @@ async function CheckIfUserAreHoster(idUser, SocketClients) {
 
 //Retorna o id do player
 async function FindSocket(socket, Username, SocketClients) {
-    if (Username != "")
-        return SocketClients.NewPlayer.findIndex(ws => ws.connection.request.connection._peername.address == socket.request.connection._peername.address || (ws.name == Username));
-    else
-        return SocketClients.NewPlayer.findIndex(ws => ws.connection.request.connection._peername.address == socket.request.connection._peername.address || (ws.name == Username || ws.connection.id == socket.id));
+    return -1;
+    // if (Username != "")
+    //     return SocketClients.NewPlayer.findIndex(ws => ws.connection.request.connection._peername.address == socket.request.connection._peername.address || (ws.name == Username));
+    // else
+    //     return SocketClients.NewPlayer.findIndex(ws => ws.connection.request.connection._peername.address == socket.request.connection._peername.address || (ws.name == Username || ws.connection.id == socket.id));
 }
 
 //Cria um id do lobby
@@ -56,6 +57,7 @@ async function ReturnWhereIsPlayer(idPlayer, SocketClients) {
 //Adicona o jogador a lista
 async function AddPlayer(player, SocketClients) {
     SocketClients.NewPlayer.push(player);
+    SendMessageToPlayer("Bem vindo " + player.name, player.connection);
 }
 
 //Cria um lobby
@@ -80,11 +82,19 @@ async function CheckSocketExisted(Username, socket, SocketClients) {
 //Adiciona o jogador ao lobby
 async function JoinLobby(Username, idLobby, SocketClients) {
 
-    var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
-    if (idGame != -1) {
-        var idPlayer = await GetIdPlayer(Username, SocketClients);
-        SocketClients.NewGame[idLobby].players.push(idPlayer);
+    var idPlayer = await GetIdPlayer(Username, SocketClients);
+    if (Username != "" && idLobby != undefined && parseInt(idLobby) > -1){
+        var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
+        if (idGame != -1) {
+            SocketClients.NewGame[idLobby].players.push(idPlayer);
+        }
     }
+    else {
+        await SendMessageToPlayer("Erro ao entrar no lobby", socket);
+        SocketClients.NewPlayer[idPlayer].connection.disconnect();
+    } 
+    
+    
 
     //TODO: Meter um algoritmo para informar que teve sucesso no login ou não!
     //TODO: Meter uma condição que verifica se o player já está em algum lobby não entrar em mais nenhum
@@ -211,5 +221,4 @@ module.exports = {
     RemoveLobby,
     DisconnectAllUsers,
     DisconnectOneUser
-
 };
