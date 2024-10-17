@@ -59,6 +59,10 @@ io.on('connection', function (socket) {
         await FS.CreateLobby(data.Username, SocketClients);
     });
 
+    socket.on('ListLobbys', async function (data) {
+        await FS.ReturnListOfLobbys(SocketClients, socket);
+    });
+
     // Recebe o NomeJogador e o idLobby
     socket.on('JoinLobby', async function (data) {
         data = JSON.parse(data.text);
