@@ -12,7 +12,7 @@ socket.on('status', async function (data) {
         let a = 0;
         while(true)
         {
-            await socket.emit('Ping', { text: `{"Sou Lindo!! SIIIIIM ${a++}"` });
+            await socket.emit('Ping', { text: `{""}` });
             await new Promise(resolve => setTimeout(resolve, 1000));
             console.log("Ping"+a);
         }

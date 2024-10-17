@@ -68,7 +68,7 @@ async function CreateLobby(Username, SocketClients) {
 
     //TODO: Meter uma condição que verifica se o hoster já está em algum lobby
 
-    SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: [] });
+    SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: { EstadoJogador: [], JogadorReady: [] } });
 }
 
 /* Verifica se o Socket já está ligado! */
@@ -83,7 +83,7 @@ async function CheckSocketExisted(Username, socket, SocketClients) {
 async function JoinLobby(Username, idLobby, SocketClients) {
 
     var idPlayer = await GetIdPlayer(Username, SocketClients);
-    if (Username != "" && idLobby != undefined && parseInt(idLobby) > -1){
+    if (Username != "" && idLobby != undefined && parseInt(idLobby) > -1) {
         var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
         if (idGame != -1) {
             SocketClients.NewGame[idLobby].players.push(idPlayer);
@@ -92,9 +92,9 @@ async function JoinLobby(Username, idLobby, SocketClients) {
     else {
         await SendMessageToPlayer("Erro ao entrar no lobby", socket);
         SocketClients.NewPlayer[idPlayer].connection.disconnect();
-    } 
-    
-    
+    }
+
+
 
     //TODO: Meter um algoritmo para informar que teve sucesso no login ou não!
     //TODO: Meter uma condição que verifica se o player já está em algum lobby não entrar em mais nenhum
@@ -193,13 +193,34 @@ async function StartGameOnLobby(data, SocketClients) {
         if (idGame != -1) {
             SocketClients.NewGame[idGame].active = true;
 
-            SocketClients.NewGame[data.idLobby].statusGame = { EstadoJogador: [], JogadorReady: [] };
-            SocketClients.NewGame[data.idLobby].players.forEach(element => {
-                SocketClients.NewGame[data.idLobby].statusGame.EstadoJogador.plus({});
-            });
+            //...
         }
     }
 }
+
+// Função que diz que os jogadores já estão ready envia para a lista os jogadores que estão ready
+async function OkReadyLobby(data, SocketClients, socketclient) {
+
+    if (await CheckLobbyExisted(data.idLobby, SocketClients)) {
+        var lobby = SocketClients.NewGame[data.idLobby];
+        var idUser = await GetIdPlayer(data.Username, SocketClients);
+        if (!lobby.players.includes(idUser)) {
+            lobby.statusGame.push({ idPlayer: idUser, ready: true });
+
+            if (lobby.player.length == lobby.statusGame.length)
+                SocketClients.NewGame[data.idLobby].players.forEach(element => {
+                    SocketClients.NewGame[data.idLobby].statusGame.EstadoJogador.plus({});
+                });
+        }
+        else{
+            if(lobby.statusGame.includes(idUser)){
+                lobby.statusGame[idUser].ready ==true? lobby.statusGame[idUser].ready = false : lobby.statusGame[idUser].ready = true;
+            }
+        }
+
+    }
+}
+
 //#endregion
 
 

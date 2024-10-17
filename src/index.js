@@ -66,4 +66,8 @@ io.on('connection', function (socket) {
     socket.on('StartGameOnLobby', async function (data) {
         await FS.StartGameOnLobby(JSON.parse(data.text), SocketClients);
     });
+
+    socket.on('OkReadyLobby', async function (data) {
+        await FS.OkReadyLobby(JSON.parse(data.text), SocketClients);
+    });
 });
