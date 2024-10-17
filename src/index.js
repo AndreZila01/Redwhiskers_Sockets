@@ -41,6 +41,8 @@ io.on('connection', function (socket) {
 
     socket.on('Ping', async function (data) {
         console.log(data);
+        var s = await FS.PingPongClient(data, socket, SocketClients);
+        await FS.SendToAllPlayers(s, SocketClients);
         //Enviar data de todos os clientes que estão naquele server
     });
 
@@ -68,6 +70,6 @@ io.on('connection', function (socket) {
     });
 
     socket.on('OkReadyLobby', async function (data) {
-        await FS.OkReadyLobby(JSON.parse(data.text), SocketClients);
+        await FS.OkReadyLobby(JSON.parse(data.text), SocketClients, socket);
     });
 });

@@ -181,8 +181,15 @@ async function SendMessageToPlayer(data, socket) {
 }
 
 // Função onde o server recebe informações do cliente!
-async function PingPongClient(data, SocketClients) {
-    SocketClients.NewGame[data.idLobby].statusGame
+async function PingPongClient(data, socketactualclient, SocketClients) {
+
+    var idClient = await GetIdPlayer(data.Username, SocketClients);
+
+    SocketClients.NewGame[data.idLobby].statusGame.EstadoJogador[idClient] = {x: data.x, y: data.y, pontuacao: data.pontuacao, };
+
+    //SocketClients.NewGame[data.idLobby].statusGame.EstadoJogador
+
+
     //Enviar data de todos os clientes que estão naquele server
 }
 
@@ -205,7 +212,7 @@ async function OkReadyLobby(data, SocketClients, socketclient) {
         var lobby = SocketClients.NewGame[data.idLobby];
         var idUser = await GetIdPlayer(data.Username, SocketClients);
         if (!lobby.players.includes(idUser)) {
-            lobby.statusGame.push({ idPlayer: idUser, ready: true });
+            lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
 
             if (lobby.player.length == lobby.statusGame.length)
                 SocketClients.NewGame[data.idLobby].players.forEach(element => {
@@ -214,7 +221,7 @@ async function OkReadyLobby(data, SocketClients, socketclient) {
         }
         else{
             if(lobby.statusGame.includes(idUser)){
-                lobby.statusGame[idUser].ready ==true? lobby.statusGame[idUser].ready = false : lobby.statusGame[idUser].ready = true;
+                lobby.statusGame[idUser].JogadorReady.ready ==true? lobby.statusGame[idUser].ready = false : lobby.statusGame[idUser].ready = true;
             }
         }
 
@@ -234,6 +241,7 @@ module.exports = {
     JoinLobby,
     GetIdPlayer,
     CheckLobbyExisted,
+    OkReadyLobby,
     CheckIfUserAreOnLobby,
     FindSocket,
     NewIdLobby,
