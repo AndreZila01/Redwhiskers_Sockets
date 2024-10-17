@@ -35,6 +35,7 @@ async function load() {
                 break;
             case "2":
                 socket.emit('CreateLobby', { text: `{"Username":"${username}"}` });
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 break;
             case "3":
                 socket.emit('ListLobbys', {  });
