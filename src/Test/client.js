@@ -1,5 +1,6 @@
 var io = require('socket.io-client');
 const prompt = require("prompt-sync")({ sigint: true });
+require('dotenv').config();
 var socket = io.connect(`http://${process.env.Ipv4}:${process.env.Port}`);
 
 // Listen for the 'news' event from the server
@@ -9,13 +10,22 @@ socket.on('news', function (data) {
 
 socket.on('status', function (data) {
     console.log('Received news from server1:', data);
+
+    if (data.text == "gamewasstarted") {
+        let a = 0;
+        while (true) {
+            socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"x\":0, \"y\":0}` });
+            new Promise(resolve => setTimeout(resolve, 1000));
+            console.log("Ping" + a);
+        }
+    }
 });
 
 // Send a 'news' event to the server
+var username = "Test1";
 
 async function load() {
 
-    var username = "Test1";
     // socket.emit('NewPlayer', { text: '{"Username":"Test1"}' });
     // socket.emit('news', { text: 'Hello from the client!' });
     // await Promise.resolve(setTimeout(() => { }, 1000));
@@ -38,7 +48,7 @@ async function load() {
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 break;
             case "3":
-                socket.emit('ListLobbys', {  });
+                socket.emit('ListLobbys', {});
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 break;
             case "4":

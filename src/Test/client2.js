@@ -1,5 +1,6 @@
 var io = require('socket.io-client');
-var socket = io.connect('http://localhost:3000');
+require('dotenv').config();
+var socket = io.connect(`http://${process.env.Ipv4}:${process.env.Port}`);
 
 // Listen for the 'news' event from the server
 socket.on('news', function (data) {
