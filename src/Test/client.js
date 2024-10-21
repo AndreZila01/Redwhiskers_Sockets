@@ -1,6 +1,6 @@
 var io = require('socket.io-client');
 const prompt = require("prompt-sync")({ sigint: true });
-var socket = io.connect('http://localhost:3000');
+var socket = io.connect(`http://${process.env.Ipv4}:${process.env.Port}`);
 
 // Listen for the 'news' event from the server
 socket.on('news', function (data) {
