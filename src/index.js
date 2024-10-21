@@ -1,15 +1,16 @@
 var express = require('express');
 const { Socket } = require('socket.io');
 var app = express();
+require('dotenv').config();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http); // Initialize Socket.io
-const Port = 3000;
+const Port = process.env.Port;
 const FS = require('./FS.js');
 
 http.listen(Port, function () {
 
     // var s = (require('./class.js'));
-    console.log('listening on *:3000');
+    console.log(`listening on *:${Port}`);
     SocketClients = JSON.parse("{\"NewGame\": [], \"NewPlayer\":[]}");
 });
 
@@ -35,6 +36,7 @@ io.on('connection', function (socket) {
             await FS.AddPlayer(s[0], SocketClients);
         else {
             await FS.SendMessageToPlayer("Já existe um jogador com esse nome ou ip", socket);
+            socket.intentionalDisconnect = true; // Seta a flag no próprio socket
             socket.disconnect();
         }
     });
@@ -50,8 +52,9 @@ io.on('connection', function (socket) {
         await FS.SendToAllPlayers("Estou vivo", SocketClients);
     });
 
-    socket.on('disconnect', async function () {
-        await FS.DisconnectOneUser(socket, SocketClients);
+    socket.on('disconnect', async function (data) {
+        if (!socket.intentionalDisconnect)
+            await FS.DisconnectOneUser(socket, SocketClients);
     });
 
     socket.on('CreateLobby', async function (data) {
