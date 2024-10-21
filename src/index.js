@@ -4,7 +4,7 @@ var app = express();
 require('dotenv').config();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http); // Initialize Socket.io
-const Port = process.env.Port;
+const Port = parseInt(process.env.Port);
 const FS = require('./FS.js');
 
 http.listen(Port, function () {
@@ -44,7 +44,7 @@ io.on('connection', function (socket) {
     socket.on('Ping', async function (data) {
         console.log(data);
         var s = await FS.PingPongClient(data, socket, SocketClients);
-        await FS.SendToAllPlayers(s, SocketClients);
+        //await FS.SendToAllPlayers(s, SocketClients);
         //Enviar data de todos os clientes que estão naquele server
     });
 
@@ -70,10 +70,6 @@ io.on('connection', function (socket) {
     socket.on('JoinLobby', async function (data) {
         data = JSON.parse(data.text);
         await FS.JoinLobby(data.Username, data.idLobby, SocketClients);
-    });
-
-    socket.on('StartGameOnLobby', async function (data) {
-        await FS.StartGameOnLobby(JSON.parse(data.text), SocketClients);
     });
 
     socket.on('OkReadyLobby', async function (data) {

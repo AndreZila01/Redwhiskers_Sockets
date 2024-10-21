@@ -11,7 +11,7 @@ socket.on('news', function (data) {
 socket.on('status', function (data) {
     console.log('Received news from server1:', data);
 
-    if (data.text == "gamewasstarted") {
+    if (data.text == "Todos os jogadores estão ready! O jogo vai começar!") {
         let a = 0;
         while (true) {
             socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"x\":0, \"y\":0}` });
@@ -22,10 +22,10 @@ socket.on('status', function (data) {
 });
 
 // Send a 'news' event to the server
-var username = "Test1";
+var username;
 
 async function load() {
-
+    username = "Test1";
     // socket.emit('NewPlayer', { text: '{"Username":"Test1"}' });
     // socket.emit('news', { text: 'Hello from the client!' });
     // await Promise.resolve(setTimeout(() => { }, 1000));

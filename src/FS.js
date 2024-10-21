@@ -244,7 +244,8 @@ async function OkReadyLobby(data, SocketClients, socketclient) {
             var idUser = await GetIdPlayer(data.Username, SocketClients);
             if (!lobby.statusGame.JogadorReady.includes(idUser)) {
                 lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
-
+                
+                await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient);
                 if (lobby.players.length == lobby.statusGame.JogadorReady.length) {
                     let json = ""
                     SocketClients.NewGame[idLobby].players.forEach(element => {
@@ -255,7 +256,6 @@ async function OkReadyLobby(data, SocketClients, socketclient) {
 
                     await SendMessageToPlayersOnLobby(lobby, "Todos os jogadores estão ready! O jogo vai começar!", SocketClients);
                 }
-                await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient);
             }
             else {
                 if (lobby.statusGame.JogadorReady.includes(idUser)) {
