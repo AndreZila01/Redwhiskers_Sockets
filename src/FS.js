@@ -200,11 +200,11 @@ async function PingPongClient(data, socketactualclient, SocketClients) {
             player.distancia = Math.sqrt(Math.pow(player.x, 2) + Math.pow(player.y, 2));
 
             var json = "{\"players\":[";
-            lobby.forEach(element => {
+            SocketClients.NewGame[lobby].statusGame.EstadoJogador.forEach(element => {
                 json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}},`;
             });
 
-            await SendMessageToPlayersOnLobby(lobby, json.substring(0, json.length - 1) + "]", SocketClients);
+            await SendMessageToPlayersOnLobby(SocketClients.NewGame[lobby], json.substring(0, json.length - 1) + "]", SocketClients);
         }
     }
     //SocketClients.NewGame[data.idLobby].statusGame.EstadoJogador

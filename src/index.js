@@ -43,7 +43,7 @@ io.on('connection', function (socket) {
 
     socket.on('Ping', async function (data) {
         console.log(data);
-        var s = await FS.PingPongClient(data, socket, SocketClients);
+        var s = await FS.PingPongClient(JSON.parse(data.text), socket, SocketClients);
         //await FS.SendToAllPlayers(s, SocketClients);
         //Enviar data de todos os clientes que estão naquele server
     });
@@ -53,7 +53,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('disconnect', async function (data) {
-        if (!socket.intentionalDisconnect)
+        if (!socket.intentionalDisconnect || SocketClients.length != 0)
             await FS.DisconnectOneUser(socket, SocketClients);
     });
 
