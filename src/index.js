@@ -36,7 +36,7 @@ io.on('connection', function (socket) {
             await FS.AddPlayer(s[0], SocketClients);
         else {
             await FS.SendMessageToPlayer("Já existe um jogador com esse nome ou ip", socket);
-            socket.intentionalDisconnect = true; // Seta a flag no próprio socket
+            socket.intentionalDisconnect = "false";
             socket.disconnect();
         }
     });
@@ -53,7 +53,9 @@ io.on('connection', function (socket) {
     });
 
     socket.on('disconnect', async function (data) {
-        if (!socket.intentionalDisconnect || SocketClients.length != 0)
+        console.log(`${socket.intentionalDisconnect} - ${SocketClients.NewPlayer.length}`);
+        //SocketClients.NewPlayer.length != 0 && socket.intentionalDisconnect=="false"
+        if (!socket.intentionalDisconnect)
             await FS.DisconnectOneUser(socket, SocketClients);
     });
 

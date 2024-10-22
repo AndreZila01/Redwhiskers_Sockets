@@ -93,6 +93,7 @@ async function JoinLobby(Username, idLobby, SocketClients) {
     }
     else {
         await SendMessageToPlayer("Erro ao entrar no lobby", socket);
+        SocketClients.NewPlayer[idPlayer].connection.intentionalDisconnect="true";
         SocketClients.NewPlayer[idPlayer].connection.disconnect();
     }
 
@@ -109,6 +110,8 @@ async function JoinLobby(Username, idLobby, SocketClients) {
 
 //Remove o jogador do lobby, com idClient
 async function RemovePlayer(idClient, SocketClients) {
+    SocketClients.NewPlayer[idClient].connection.intentionalDisconnect="true";
+    SocketClients.NewPlayer[idClient].connection.disconnect();
     SocketClients.NewPlayer.splice(idClient, 1);
 }
 
@@ -120,6 +123,7 @@ async function RemoveLobby(idlobby, SocketClients) {
 //Desliga todos os users dos lobbys
 async function DisconnectAllUsers(SocketClients) {
     SocketClients.NewPlayer.forEach(element => {
+        element.connection.intentionalDisconnect="true";
         element.connection.disconnect();
     });
     //TODO: apagar todos os users e lobbys da lista
@@ -135,6 +139,7 @@ async function DisconnectAllPlayersOfLobby(lobby, SocketClients) {
     lobby.players.forEach(async element => {
         var player = SocketClients.NewPlayer[element];
         await SendMessageToPlayer("O lobby foi fechado", player.connection);
+        player.connection.intentionalDisconnect="true";
         player.connection.disconnect();
     });
 }
@@ -142,6 +147,7 @@ async function DisconnectAllPlayersOfLobby(lobby, SocketClients) {
 //Desliga um user do lobby
 async function DisconnectOneUser(socket, SocketClients) {
     var index = await FindSocket(socket, "", SocketClients);
+    console.log(`Adeus ${SocketClients.NewPlayer[index].Username}! Até a uma próxima!`);
     if (await CheckIfUserAreHoster(index, SocketClients)) {
         var lobby = SocketClients.NewGame[await ReturnWhereIsPlayer(index, SocketClients)];
         await DisconnectAllPlayersOfLobby(lobby, SocketClients);
@@ -155,7 +161,6 @@ async function DisconnectOneUser(socket, SocketClients) {
             await RemovePlayerFromLobby(index, idLobby, SocketClients);
     }
 
-    console.log(`Adeus ${SocketClients.NewPlayer[index].Username}! Até a uma próxima!`);
     await RemovePlayer(index, SocketClients);
     //TODO: apagar o user da lista
 }
