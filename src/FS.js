@@ -1,9 +1,11 @@
 //#region Funcções com returns "basicos"
 
+const { Socket } = require("socket.io");
+
 /* Funções que retornam dados */
-//Retorna o id do player
+//Retorna o id do player na lista
 async function GetIdPlayer(Username, SocketClients) {
-    return SocketClients.NewPlayer.findIndex(ws => ws.name == Username);
+    return SocketClients.NewPlayer.findIndex(ws => ws.Username == Username);
 }
 
 //Retorna true or false se o lobby existe
@@ -16,12 +18,6 @@ async function CheckIfUserAreOnLobby(Username, SocketClients) {
     return SocketClients.NewGame.findIndex(ws => ws.players.includes(GetId(Username, SocketClients))) != -1;
 }
 
-
-//Verifica se o utilizador com o numero x é dono de algum lobby, retorna os dados!
-async function ReturnDataOfLobbyWherePlayerAreHost(IdPlayer, SocketClients) {
-    return SocketClients.NewGame[SocketClients.NewGame.findIndex(ws => ws.players[0] == IdPlayer)];
-}
-
 //Verifica se o jogador é hoster ou não, retorna true or false
 async function CheckIfUserAreHoster(idUser, SocketClients) {
     return SocketClients.NewGame.findIndex(ws => ws.players[0] == idUser) != -1;
@@ -29,7 +25,11 @@ async function CheckIfUserAreHoster(idUser, SocketClients) {
 
 //Retorna o id do player
 async function FindSocket(socket, Username, SocketClients) {
-    return SocketClients.NewPlayer.findIndex(ws => ws.connection.request.connection._peername.address == socket.request.connection._peername.address && (ws.name == Username || ws.connection.id == socket.id));
+    // return -1;
+    if (Username != "")
+        return SocketClients.NewPlayer.findIndex(ws => ws.connection.request.connection._peername.address == socket.request.connection._peername.address || (ws.Username == Username));
+    else
+        return SocketClients.NewPlayer.findIndex(ws => ws.connection.request.connection._peername.address == socket.request.connection._peername.address || (ws.Username == Username || ws.connection.id == socket.id));
 }
 
 //Cria um id do lobby
@@ -50,30 +50,54 @@ async function ReturnWhereIsPlayer(idPlayer, SocketClients) {
 
 //#region  Add Lista 
 
-//Aidicona jogador
+//Adicona o jogador a lista
 async function AddPlayer(player, SocketClients) {
     SocketClients.NewPlayer.push(player);
+    await SendMessageToPlayer("Bem vindo " + player.Username, player.connection);
 }
 
 //Cria um lobby
 async function CreateLobby(Username, SocketClients) {
     var idHoster = await GetIdPlayer(Username, SocketClients);
     var idLobby = await NewIdLobby(SocketClients);
+    console.log(idHoster + " " + idLobby);
 
     //TODO: Meter uma condição que verifica se o hoster já está em algum lobby
 
-    SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: [] });
+    if (!await CheckIfUserAreHoster(idHoster, SocketClients)) {
+        SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: { EstadoJogador: [], JogadorReady: [] } });
 
+        await SendMessageToPlayer("Lobby criado com sucesso " + SocketClients.NewPlayer[idHoster].Username, SocketClients.NewPlayer[idHoster].connection);
+    }
+    else
+        await SendMessageToPlayer("Já está em algum lobby", SocketClients.NewPlayer[idHoster].connection);
 }
 
-//Adiciona um jogador ao lobby
+/* Verifica se o Socket já está ligado! */
+async function CheckSocketExisted(Username, socket, SocketClients) {
+    if (await FindSocket(socket, Username, SocketClients) == -1)
+        return [{ id: SocketClients.NewPlayer.length, Username: Username, score: 0, active: false, connection: socket }];
+    else
+        return [];
+}
+
+//Adiciona o jogador ao lobby
 async function JoinLobby(Username, idLobby, SocketClients) {
 
-    var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
-    if (idGame != -1) {
-        var idPlayer = await GetIdPlayer(Username, SocketClients);
-        SocketClients.NewGame[idLobby].players.push(idPlayer);
+    var idPlayer = await GetIdPlayer(Username, SocketClients);
+    if (Username != "" && idLobby != undefined && parseInt(idLobby) > -1) {
+        var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
+        if (idGame != -1) {
+            SocketClients.NewGame[idLobby].players.push(idPlayer);
+        }
     }
+    else {
+        await SendMessageToPlayer("Erro ao entrar no lobby", socket);
+        SocketClients.NewPlayer[idPlayer].connection.intentionalDisconnect="true";
+        SocketClients.NewPlayer[idPlayer].connection.disconnect();
+    }
+
+
 
     //TODO: Meter um algoritmo para informar que teve sucesso no login ou não!
     //TODO: Meter uma condição que verifica se o player já está em algum lobby não entrar em mais nenhum
@@ -84,8 +108,10 @@ async function JoinLobby(Username, idLobby, SocketClients) {
 
 //#region  Remove Lista
 
-//Remove um jogador do lobby, com nome ou com idClient
+//Remove o jogador do lobby, com idClient
 async function RemovePlayer(idClient, SocketClients) {
+    SocketClients.NewPlayer[idClient].connection.intentionalDisconnect="true";
+    SocketClients.NewPlayer[idClient].connection.disconnect();
     SocketClients.NewPlayer.splice(idClient, 1);
 }
 
@@ -97,6 +123,7 @@ async function RemoveLobby(idlobby, SocketClients) {
 //Desliga todos os users dos lobbys
 async function DisconnectAllUsers(SocketClients) {
     SocketClients.NewPlayer.forEach(element => {
+        element.connection.intentionalDisconnect="true";
         element.connection.disconnect();
     });
     //TODO: apagar todos os users e lobbys da lista
@@ -112,6 +139,7 @@ async function DisconnectAllPlayersOfLobby(lobby, SocketClients) {
     lobby.players.forEach(async element => {
         var player = SocketClients.NewPlayer[element];
         await SendMessageToPlayer("O lobby foi fechado", player.connection);
+        player.connection.intentionalDisconnect="true";
         player.connection.disconnect();
     });
 }
@@ -119,8 +147,9 @@ async function DisconnectAllPlayersOfLobby(lobby, SocketClients) {
 //Desliga um user do lobby
 async function DisconnectOneUser(socket, SocketClients) {
     var index = await FindSocket(socket, "", SocketClients);
+    console.log(`Adeus ${SocketClients.NewPlayer[index].Username}! Até a uma próxima!`);
     if (await CheckIfUserAreHoster(index, SocketClients)) {
-        var lobby = await ReturnDataOfLobbyWherePlayerAreHost(index, SocketClients);
+        var lobby = SocketClients.NewGame[await ReturnWhereIsPlayer(index, SocketClients)];
         await DisconnectAllPlayersOfLobby(lobby, SocketClients);
         await RemoveLobby(lobby, SocketClients);
         //TODO: Fechar Servidor, Desconnectar todos os users, Guardar na DATABASE, 
@@ -131,6 +160,7 @@ async function DisconnectOneUser(socket, SocketClients) {
         if (idLobby != -1)
             await RemovePlayerFromLobby(index, idLobby, SocketClients);
     }
+
     await RemovePlayer(index, SocketClients);
     //TODO: apagar o user da lista
 }
@@ -138,20 +168,19 @@ async function DisconnectOneUser(socket, SocketClients) {
 
 //#region Funções void
 
-/* Funcções que enviam variaveis e verifica dados! */
-async function addSocket(Username, socket, SocketClients) {
-    var s = FindSocket(socket, Username, SocketClients);
-    if (s != -1)
-        return [{ id: SocketClients.NewPlayer.length, name: Username, score: 0, active: false, connection: socket }];
-    else
-        return "Already have a user with that name or ip";
-}
-//#endregion
-
+//#region Funções de envio e receber dados do cliente
 /* Função para informar todos os users */
 async function SendToAllPlayers(data, SocketClients) {
     SocketClients.NewPlayer.forEach(element => {
         element.connection.emit('status', { content: data });
+    });
+}
+
+// Envia Mensagem a todos os jogadores do lobby!
+async function SendMessageToPlayersOnLobby(lobby, mensagem, SocketClients) {
+    lobby.players.forEach(async element => {
+        var player = SocketClients.NewPlayer[element];
+        await SendMessageToPlayer(mensagem, player.connection);
     });
 }
 
@@ -160,29 +189,119 @@ async function SendMessageToPlayer(data, socket) {
     socket.emit('status', { content: data });
 }
 
-async function Ping(data) {
+// Função onde o server recebe informações do cliente!
+async function PingPongClient(data, socketactualclient, SocketClients) {
+
+    var idClient = await GetIdPlayer(data.Username, SocketClients);
+
+    if (idClient != -1) {
+        var idLobby = await ReturnWhereIsPlayer(idClient, SocketClients);
+        var lobby = await ReturnIdOfLobby(SocketClients, idLobby);
+
+        if (lobby != -1) {
+            var player = SocketClients.NewGame[lobby].statusGame.EstadoJogador.find(ws => ws.idPlayer == idClient);
+            player.x = data.x;
+            player.y = data.y;
+            player.distancia = Math.sqrt(Math.pow(player.x, 2) + Math.pow(player.y, 2));
+
+            var json = "{\"players\":[";
+            SocketClients.NewGame[lobby].statusGame.EstadoJogador.forEach(element => {
+                json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}},`;
+            });
+
+            await SendMessageToPlayersOnLobby(SocketClients.NewGame[lobby], json.substring(0, json.length - 1) + "]", SocketClients);
+        }
+    }
+    //SocketClients.NewGame[data.idLobby].statusGame.EstadoJogador
+
+
+    //TODO: Verificar se o player está no lobby
+    //TODO: receber o id do lobby
+    //TODO: atualizar dados do atual player
+    //TOOD: Enviar dados para todos os players do lobby
+
+
+
+
     //Enviar data de todos os clientes que estão naquele server
+}
+
+/* NÃO SEI SE É UTIL OU NÃO!! */
+// // Função onde começa o jogo e cria as coisas necessárias
+// async function StartGameOnLobby(data, SocketClients) {
+//     if (CheckIfUserAreHoster(data.idPlayer, SocketClients)) {
+//         var idGame = await ReturnIdOfLobby(SocketClients, data.idLobby);
+//         if (idGame != -1) {
+//             SocketClients.NewGame[idGame].active = true;
+
+//             //...
+//         }
+//     }
+// }
+
+// Função que diz que os jogadores já estão ready envia para a lista os jogadores que estão ready
+async function OkReadyLobby(data, SocketClients, socketclient) {
+
+    var idLobby = await ReturnWhereIsPlayer(await FindSocket(socketclient, "", SocketClients), SocketClients);
+    if (idLobby != -1)
+        if (await CheckLobbyExisted(idLobby, SocketClients)) {
+            var lobby = SocketClients.NewGame[idLobby];
+            var idUser = await GetIdPlayer(data.Username, SocketClients);
+            if (!lobby.statusGame.JogadorReady.includes(idUser)) {
+                lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
+                
+                await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient);
+                if (lobby.players.length == lobby.statusGame.JogadorReady.length) {
+                    let json = ""
+                    SocketClients.NewGame[idLobby].players.forEach(element => {
+                        json += `{\"idPlayer\":${element}, \"ready\":true, \"x\":0, \"y\":0, \"distancia\":0.0, \"personagem\":[], \"powerups\":[]},`;
+                    });
+                    SocketClients.NewGame[idLobby].statusGame.EstadoJogador = (JSON.parse("[" + json.substring(0, json.length - 1) + "]"));
+                    SocketClients.NewGame[idLobby].statusGame.EstadoJogador.sort((a, b) => parseFloat(a.idPlayer) - parseFloat(b.idPlayer));
+
+                    await SendMessageToPlayersOnLobby(lobby, "Todos os jogadores estão ready! O jogo vai começar!", SocketClients);
+                }
+            }
+            else {
+                if (lobby.statusGame.JogadorReady.includes(idUser)) {
+                    var index = lobby.statusGame.JogadorReady.findIndex(ws => ws.idPlayer == idUser);
+                    lobby.statusGame[index].JogadorReady.ready == true ? lobby.statusGame[index].ready = false : lobby.statusGame[index].ready = true;
+                }
+            }
+
+        }
+}
+
+// Função que retorna a lista de lobbys
+async function ReturnListOfLobbys(SocketClients, socket) {
+
+    var lobbys = "";
+    SocketClients.NewGame.forEach(element => {
+        lobbys += lobbys + `id: ${element.idGame}, players: ${element.players.length}/8, Playing: ${element.active}`;
+    });
+    await SendMessageToPlayer(lobbys, socket);
 }
 
 //#endregion
 
 
 module.exports = {
-    addSocket,
-    Ping,
+    CheckSocketExisted,
+    PingPongClient,
     CreateLobby,
+    // StartGameOnLobby,
     SendToAllPlayers,
     SendMessageToPlayer,
     JoinLobby,
     GetIdPlayer,
     CheckLobbyExisted,
+    OkReadyLobby,
     CheckIfUserAreOnLobby,
     FindSocket,
-    NewIdLobby,
+    NewIdLobby, ReturnListOfLobbys,
     AddPlayer,
     RemovePlayer,
     RemoveLobby,
     DisconnectAllUsers,
     DisconnectOneUser
-
 };

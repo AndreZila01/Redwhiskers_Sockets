@@ -1,5 +1,6 @@
 var io = require('socket.io-client');
-var socket = io.connect('http://localhost:3000');
+require('dotenv').config();
+var socket = io.connect(`http://${process.env.Ipv4}:${process.env.Port}`);
 
 // Listen for the 'news' event from the server
 socket.on('news', function (data) {
@@ -11,9 +12,10 @@ socket.on('status', function (data) {
 });
 
 // Send a 'news' event to the server
-async function load() {
 
-    socket.emit('addSocket', { text: '{"Username":"Test2"}' });
+async function load()
+{
+    socket.emit('NewPlayer', { text: '{"Username":"Test2"}' });
     socket.emit('news', { text: 'Hello from the client!' });
     await Promise.resolve(setTimeout(() => { }, 1000));
     socket.emit('JoinLobby', { text: '{"Username":"Test2", "idLobby":0}' });

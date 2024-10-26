@@ -1,20 +1,26 @@
 var express = require('express');
 const { Socket } = require('socket.io');
 var app = express();
+require('dotenv').config();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http); // Initialize Socket.io
-const Port = 3000;
+console.log(process.env.Port);  
+const Port = parseInt(process.env.Port);
 const FS = require('./FS.js');
 
 http.listen(Port, function () {
 
     // var s = (require('./class.js'));
-    console.log('listening on *:3000');
+    console.log(`listening on *:${Port}`);
     SocketClients = JSON.parse("{\"NewGame\": [], \"NewPlayer\":[]}");
 });
 
 app.get('/', async function (req, res) {
-    await FS.SendToAllPlayers("Estou vivo", SocketClients);
+    await FS.SendToAllPlayers("Hello World", SocketClients);
+});
+
+app.get('/startGame', async function (req, res) {
+    await FS.SendToAllPlayers("startGame", SocketClients);
 });
 
 let SocketClients = [];
@@ -23,17 +29,23 @@ io.on('connection', function (socket) {
     console.log('a user connected');
 
 
-    socket.on('addSocket', async function (data) {
+    socket.on('NewPlayer', async function (data) {
         data = JSON.parse(data.text);
-        var s = await FS.addSocket(data.Username, socket, SocketClients);
+        var s = await FS.CheckSocketExisted(data.Username, socket, SocketClients);
 
         if (s.length != 0)
             await FS.AddPlayer(s[0], SocketClients);
-        else
+        else {
             await FS.SendMessageToPlayer("Já existe um jogador com esse nome ou ip", socket);
+            socket.intentionalDisconnect = "false";
+            socket.disconnect();
+        }
     });
 
     socket.on('Ping', async function (data) {
+        console.log(data);
+        var s = await FS.PingPongClient(JSON.parse(data.text), socket, SocketClients);
+        //await FS.SendToAllPlayers(s, SocketClients);
         //Enviar data de todos os clientes que estão naquele server
     });
 
@@ -41,8 +53,11 @@ io.on('connection', function (socket) {
         await FS.SendToAllPlayers("Estou vivo", SocketClients);
     });
 
-    socket.on('disconnect', async function () {
-        await FS.DisconnectOneUser(socket, SocketClients);
+    socket.on('disconnect', async function (data) {
+        //console.log(`${socket.intentionalDisconnect} - ${SocketClients.NewPlayer.length}`);
+        //SocketClients.NewPlayer.length != 0 && socket.intentionalDisconnect=="false"
+        if (!socket.intentionalDisconnect)
+            await FS.DisconnectOneUser(socket, SocketClients);
     });
 
     socket.on('CreateLobby', async function (data) {
@@ -50,10 +65,17 @@ io.on('connection', function (socket) {
         await FS.CreateLobby(data.Username, SocketClients);
     });
 
+    socket.on('ListLobbys', async function (data) {
+        await FS.ReturnListOfLobbys(SocketClients, socket);
+    });
+
     // Recebe o NomeJogador e o idLobby
     socket.on('JoinLobby', async function (data) {
         data = JSON.parse(data.text);
         await FS.JoinLobby(data.Username, data.idLobby, SocketClients);
+    });
 
+    socket.on('OkReadyLobby', async function (data) {
+        await FS.OkReadyLobby(JSON.parse(data.text), SocketClients, socket);
     });
 });
