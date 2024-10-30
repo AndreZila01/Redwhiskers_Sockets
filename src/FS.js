@@ -15,7 +15,7 @@ async function CheckLobbyExisted(idLobby, SocketClients) {
 
 //Retorna se o player está em algum lobby
 async function CheckIfUserAreOnLobby(Username, SocketClients) {
-    return SocketClients.NewGame.findIndex(ws => ws.players.includes(GetId(Username, SocketClients))) != -1;
+    return SocketClients.NewGame.findIndex(ws => ws.players.includes(GetIdPlayer(Username, SocketClients))) != -1;
 }
 
 //Verifica se o jogador é hoster ou não, retorna true or false
@@ -87,14 +87,15 @@ async function JoinLobby(Username, idLobby, SocketClients) {
     var idPlayer = await GetIdPlayer(Username, SocketClients);
     if (Username != "" && idLobby != undefined && parseInt(idLobby) > -1) {
         if (!CheckIfUserAreOnLobby(Username, SocketClients)) {
-            //TODO: testar codigo acima!
+            //TODO: testar codigo acima! Não funciona!
             var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
             if (idGame != -1) {
                 SocketClients.NewGame[idLobby].players.push(idPlayer);
             }
         }
         else
-            console.log("O user já está em um lobby!");
+            SendMessageToPlayer("Já estás num lobby... Não podes entrar em mais que dois lobbys ao mesmo tempo!!", SocketClients.NewPlayer[idPlayer].connection);
+        // console.log("O user já está em um lobby!");
     }
     else {
         await SendMessageToPlayer("Erro ao entrar no lobby", socket);
@@ -253,18 +254,24 @@ async function OkReadyLobby(data, SocketClients, socketclient) {
             var lobby = SocketClients.NewGame[idLobby];
             var idUser = await GetIdPlayer(data.Username, SocketClients);
             if (!lobby.statusGame.JogadorReady.includes(idUser)) {
-                lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
+                if (lobby.statusGame.JogadorReady.length == 1) {
+                    await SendMessageToPlayer(lobby, "Para o jogo começar tem de ter pelo menos 1 jogador!", SocketClients.NewPlayer[idUser].connection);
+                }
+                else {
+                    lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
 
-                await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient);
-                if (lobby.players.length == lobby.statusGame.JogadorReady.length) {
-                    let json = ""
-                    SocketClients.NewGame[idLobby].players.forEach(element => {
-                        json += `{\"idPlayer\":${element}, \"ready\":true, \"x\":0, \"y\":0, \"distancia\":0.0, \"personagem\":[], \"powerups\":[]},`;
-                    });
-                    SocketClients.NewGame[idLobby].statusGame.EstadoJogador = (JSON.parse("[" + json.substring(0, json.length - 1) + "]"));
-                    SocketClients.NewGame[idLobby].statusGame.EstadoJogador.sort((a, b) => parseFloat(a.idPlayer) - parseFloat(b.idPlayer));
+                    await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient);
 
-                    await SendMessageToPlayersOnLobby(lobby, "Todos os jogadores estão ready! O jogo vai começar!", SocketClients);
+                    if (lobby.players.length == lobby.statusGame.JogadorReady.length) {
+                        let json = ""
+                        SocketClients.NewGame[idLobby].players.forEach(element => {
+                            json += `{\"idPlayer\":${element}, \"ready\":true, \"x\":0, \"y\":0, \"distancia\":0.0, \"personagem\":[], \"powerups\":[]},`;
+                        });
+                        SocketClients.NewGame[idLobby].statusGame.EstadoJogador = (JSON.parse("[" + json.substring(0, json.length - 1) + "]"));
+                        SocketClients.NewGame[idLobby].statusGame.EstadoJogador.sort((a, b) => parseFloat(a.idPlayer) - parseFloat(b.idPlayer));
+
+                        await SendMessageToPlayersOnLobby(lobby, "Todos os jogadores estão ready! O jogo vai começar!", SocketClients);
+                    }
                 }
             }
             else {

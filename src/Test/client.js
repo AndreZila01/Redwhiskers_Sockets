@@ -23,6 +23,9 @@ socket.on('status', async function (data) {
             console.log("Ping" + a);
         }
     }
+    else if(data.content.includes("Kick") || data.content.includes("Ban"))
+        process.exit();
+    
 });
 
 // Send a 'news' event to the server
