@@ -86,14 +86,19 @@ async function JoinLobby(Username, idLobby, SocketClients) {
 
     var idPlayer = await GetIdPlayer(Username, SocketClients);
     if (Username != "" && idLobby != undefined && parseInt(idLobby) > -1) {
-        var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
-        if (idGame != -1) {
-            SocketClients.NewGame[idLobby].players.push(idPlayer);
+        if (!CheckIfUserAreOnLobby(Username, SocketClients)) {
+            //TODO: testar codigo acima!
+            var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
+            if (idGame != -1) {
+                SocketClients.NewGame[idLobby].players.push(idPlayer);
+            }
         }
+        else
+            console.log("O user já está em um lobby!");
     }
     else {
         await SendMessageToPlayer("Erro ao entrar no lobby", socket);
-        SocketClients.NewPlayer[idPlayer].connection.intentionalDisconnect="true";
+        SocketClients.NewPlayer[idPlayer].connection.intentionalDisconnect = "true";
         SocketClients.NewPlayer[idPlayer].connection.disconnect();
     }
 
@@ -110,7 +115,7 @@ async function JoinLobby(Username, idLobby, SocketClients) {
 
 //Remove o jogador do lobby, com idClient
 async function RemovePlayer(idClient, SocketClients) {
-    SocketClients.NewPlayer[idClient].connection.intentionalDisconnect="true";
+    SocketClients.NewPlayer[idClient].connection.intentionalDisconnect = "true";
     SocketClients.NewPlayer[idClient].connection.disconnect();
     SocketClients.NewPlayer.splice(idClient, 1);
 }
@@ -123,7 +128,7 @@ async function RemoveLobby(idlobby, SocketClients) {
 //Desliga todos os users dos lobbys
 async function DisconnectAllUsers(SocketClients) {
     SocketClients.NewPlayer.forEach(element => {
-        element.connection.intentionalDisconnect="true";
+        element.connection.intentionalDisconnect = "true";
         element.connection.disconnect();
     });
     //TODO: apagar todos os users e lobbys da lista
@@ -139,7 +144,7 @@ async function DisconnectAllPlayersOfLobby(lobby, SocketClients) {
     lobby.players.forEach(async element => {
         var player = SocketClients.NewPlayer[element];
         await SendMessageToPlayer("O lobby foi fechado", player.connection);
-        player.connection.intentionalDisconnect="true";
+        player.connection.intentionalDisconnect = "true";
         player.connection.disconnect();
     });
 }
@@ -249,7 +254,7 @@ async function OkReadyLobby(data, SocketClients, socketclient) {
             var idUser = await GetIdPlayer(data.Username, SocketClients);
             if (!lobby.statusGame.JogadorReady.includes(idUser)) {
                 lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
-                
+
                 await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient);
                 if (lobby.players.length == lobby.statusGame.JogadorReady.length) {
                     let json = ""

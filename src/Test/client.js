@@ -8,21 +8,24 @@ socket.on('news', function (data) {
     console.log('Received news from server:', data);
 });
 
-socket.on('status', function (data) {
+var username;
+socket.on('status', async function (data) {
     console.log('Received news from server1:', data);
 
-    if (data.text == "Todos os jogadores estão ready! O jogo vai começar!") {
+    if (data.content == "Todos os jogadores estão ready! O jogo vai começar!") {
         let a = 0;
         while (true) {
+            if(username == undefined)
+                username = socket.username;
+            
             socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"x\":0, \"y\":0}` });
-            new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
             console.log("Ping" + a);
         }
     }
 });
 
 // Send a 'news' event to the server
-var username;
 
 async function load() {
     username = "Test1";
@@ -40,6 +43,7 @@ async function load() {
                 var username = prompt("Digite o username:");
                 break;
             case "1":
+                socket.username = username;
                 socket.emit('NewPlayer', { text: `{"Username":"${username}"}` });
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 break;
