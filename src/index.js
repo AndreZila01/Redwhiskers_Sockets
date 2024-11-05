@@ -8,6 +8,12 @@ console.log(process.env.Port);
 const Port = parseInt(process.env.Port);
 const FS = require('./FS.js');
 
+/*
+TODO: Haver comandos e receber do cliente "Up", "Down", "Left", "Right" e enviar para todos os clientes/bot, não receber coordenadas
+TODO: O server só receber as coordenadas do bot, mas o cliente é normal. E caso haja colider com objetos avisa ao bot para parar. E enviar ao bot de x em x tempo os futuros obstaculos
+TODO: receber do bot uma query das posições futuras da ia.
+*/
+
 http.listen(Port, function () {
 
     // var s = (require('./class.js'));
