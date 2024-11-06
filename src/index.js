@@ -4,7 +4,7 @@ var app = express();
 require('dotenv').config();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http); // Initialize Socket.io
-console.log(process.env.Port);  
+console.log(process.env.Port);
 const Port = parseInt(process.env.Port);
 const FS = require('./FS.js');
 
@@ -62,7 +62,7 @@ io.on('connection', function (socket) {
     socket.on('disconnect', async function (data) {
         //console.log(`${socket.intentionalDisconnect} - ${SocketClients.NewPlayer.length}`);
         //SocketClients.NewPlayer.length != 0 && socket.intentionalDisconnect=="false"
-        if (!socket.intentionalDisconnect)
+        if (!socket.intentionalDisconnect && SocketClients.NewPlayer.length != 0)
             await FS.DisconnectOneUser(socket, SocketClients);
     });
 

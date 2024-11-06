@@ -15,7 +15,16 @@ async function CheckLobbyExisted(idLobby, SocketClients) {
 
 //Retorna se o player está em algum lobby
 async function CheckIfUserAreOnLobby(Username, SocketClients) {
-    return SocketClients.NewGame.findIndex(ws => ws.players.includes(GetIdPlayer(Username, SocketClients))) != -1;
+    var userid = await GetIdPlayer(Username, SocketClients);
+
+    await SocketClients.NewGame.forEach(element => {
+        if (element.players.includes(userid))
+            Username = true;
+    });
+    if (Username != true)
+        return false;
+    else
+        return true;
 }
 
 //Verifica se o jogador é hoster ou não, retorna true or false
@@ -86,7 +95,7 @@ async function JoinLobby(Username, idLobby, SocketClients) {
 
     var idPlayer = await GetIdPlayer(Username, SocketClients);
     if (Username != "" && idLobby != undefined && parseInt(idLobby) > -1) {
-        if (!CheckIfUserAreOnLobby(Username, SocketClients)) {
+        if (!await CheckIfUserAreOnLobby(Username, SocketClients)) {
             //TODO: testar codigo acima! Não funciona!
             var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
             if (idGame != -1) {
@@ -206,16 +215,31 @@ async function PingPongClient(data, socketactualclient, SocketClients) {
 
         if (lobby != -1) {
             var player = SocketClients.NewGame[lobby].statusGame.EstadoJogador.find(ws => ws.idPlayer == idClient);
-            player.x = data.x;
-            player.y = data.y;
-            player.distancia = Math.sqrt(Math.pow(player.x, 2) + Math.pow(player.y, 2));
+            if (data.move != undefined || data.move != "") {
 
+                data.move = "" + data.move;
+
+                if (data.move.toLowerCase() == "up")
+                    player.y += 1;
+                else if (data.move.toLowerCase() == "down")
+                    player.y -= 1;
+                else if (data.move.toLowerCase() == "left")
+                    player.x -= 1;
+                else if (data.move.toLowerCase() == "right")
+                    player.x += 1;
+
+                player.distancia = Math.sqrt(Math.pow(player.x, 2) + Math.pow(player.y, 2));
+
+            }
             var json = "{\"players\":[";
             SocketClients.NewGame[lobby].statusGame.EstadoJogador.forEach(element => {
                 json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}},`;
             });
 
-            await SendMessageToPlayersOnLobby(SocketClients.NewGame[lobby], json.substring(0, json.length - 1) + "]", SocketClients);
+            json = json.substring(0, json.length - 1) + "],\"Obstaculos\":[{\"x\":0, \"y\":0, \"tipo\":1},{\"x\":0, \"y\":10, \"tipo\":1}]}";
+
+
+            await SendMessageToPlayersOnLobby(SocketClients.NewGame[lobby], json, SocketClients);
         }
     }
     //SocketClients.NewGame[data.idLobby].statusGame.EstadoJogador
@@ -254,18 +278,18 @@ async function OkReadyLobby(data, SocketClients, socketclient) {
             var lobby = SocketClients.NewGame[idLobby];
             var idUser = await GetIdPlayer(data.Username, SocketClients);
             if (!lobby.statusGame.JogadorReady.includes(idUser)) {
-                if (lobby.statusGame.JogadorReady.length == 1) {
-                    await SendMessageToPlayer(lobby, "Para o jogo começar tem de ter pelo menos 1 jogador!", SocketClients.NewPlayer[idUser].connection);
+                if (lobby.statusGame.JogadorReady.length == 1 && lobby.players.length == 1) {
+                    await SendMessageToPlayer(SocketClients.NewPlayer[idUser].connection, "Para o jogo começar tem de ter pelo menos 1 jogador!",);
                 }
                 else {
                     lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
 
-                    await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient);
+                    await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient);//TODO: Checkar porque ele não envia a mensagem para o ultimo utilizador ...
 
                     if (lobby.players.length == lobby.statusGame.JogadorReady.length) {
                         let json = ""
                         SocketClients.NewGame[idLobby].players.forEach(element => {
-                            json += `{\"idPlayer\":${element}, \"ready\":true, \"x\":0, \"y\":0, \"distancia\":0.0, \"personagem\":[], \"powerups\":[]},`;
+                            json += `{\"idPlayer\":${element}, \"ready\":true, \"x\":0, \"y\":0, \"distancia\":0.0, \"personagem\":\"[]\", \"powerups\":\"[]\"},`;
                         });
                         SocketClients.NewGame[idLobby].statusGame.EstadoJogador = (JSON.parse("[" + json.substring(0, json.length - 1) + "]"));
                         SocketClients.NewGame[idLobby].statusGame.EstadoJogador.sort((a, b) => parseFloat(a.idPlayer) - parseFloat(b.idPlayer));

@@ -18,7 +18,7 @@ socket.on('status', async function (data) {
             if(username == undefined)
                 username = socket.username;
             
-            socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"x\":0, \"y\":0}` });
+            socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"x\":0, \"y\":0, \"move\":\"up\"}` });
             await new Promise(resolve => setTimeout(resolve, 1000));
             console.log("Ping" + a);
         }
