@@ -9,7 +9,7 @@ const Port = parseInt(process.env.Port);
 const FS = require('./FS.js');
 
 /*
-TODO: Haver comandos e receber do cliente "Up", "Down", "Left", "Right" e enviar para todos os clientes/bot, não receber coordenadas
+DONE: Haver comandos e receber do cliente "Up", "Down", "Left", "Right" e enviar para todos os clientes/bot, não receber coordenadas
 TODO: O server só receber as coordenadas do bot, mas o cliente é normal. E caso haja colider com objetos avisa ao bot para parar. E enviar ao bot de x em x tempo os futuros obstaculos
 TODO: receber do bot uma query das posições futuras da ia.
 */
@@ -33,7 +33,6 @@ let SocketClients = [];
 //SocketClients.NewGame.push({idGame: 1, dateTime: new Date, players: [], active: false});
 io.on('connection', function (socket) {
     console.log('a user connected');
-
 
     socket.on('NewPlayer', async function (data) {
         data = JSON.parse(data.text);

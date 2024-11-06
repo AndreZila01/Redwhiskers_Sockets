@@ -84,8 +84,12 @@ async function CreateLobby(Username, SocketClients) {
 
 /* Verifica se o Socket já está ligado! */
 async function CheckSocketExisted(Username, socket, SocketClients) {
-    if (await FindSocket(socket, Username, SocketClients) == -1)
-        return [{ id: SocketClients.NewPlayer.length, Username: Username, score: 0, active: false, connection: socket }];
+    if (await FindSocket(socket, Username, SocketClients) == -1) {
+        if (!(Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot")))
+            return [{ id: SocketClients.NewPlayer.length, Username: Username, score: 0, active: false, connection: socket }];
+        else
+            return [{ id: SocketClients.NewPlayer.length, Username: Username, score: 0, active: false, connection: socket, BotMovies: [] }];
+    }
     else
         return [];
 }
@@ -187,7 +191,8 @@ async function DisconnectOneUser(socket, SocketClients) {
 /* Função para informar todos os users */
 async function SendToAllPlayers(data, SocketClients) {
     SocketClients.NewPlayer.forEach(element => {
-        element.connection.emit('status', { content: data });
+        if (!(player.Username.toLowerCase().includes("bot") || player.Username.toLowerCase().includes("cpu")))
+            element.connection.emit('status', { content: data });
     });
 }
 
@@ -195,7 +200,12 @@ async function SendToAllPlayers(data, SocketClients) {
 async function SendMessageToPlayersOnLobby(lobby, mensagem, SocketClients) {
     lobby.players.forEach(async element => {
         var player = SocketClients.NewPlayer[element];
-        await SendMessageToPlayer(mensagem, player.connection);
+        if (!(player.Username.toLowerCase().includes("bot") || player.Username.toLowerCase().includes("cpu"))) {
+            var json = JSON.parse(mensagem);
+            if (json.Obstaculos != "")
+                await SendMessageToPlayer(mensagem, player.connection); //TODO: Certificar se está a funcionar!
+        } else
+            await SendMessageToPlayer(mensagem, player.connection);
     });
 }
 
