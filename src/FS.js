@@ -191,7 +191,7 @@ async function DisconnectOneUser(socket, SocketClients) {
 /* Função para informar todos os users */
 async function SendToAllPlayers(data, SocketClients) {
     SocketClients.NewPlayer.forEach(element => {
-        if (!(player.Username.toLowerCase().includes("bot") || player.Username.toLowerCase().includes("cpu")))
+        //if (!(player.Username.toLowerCase().includes("bot") || player.Username.toLowerCase().includes("cpu")))
             element.connection.emit('status', { content: data });
     });
 }
@@ -200,12 +200,12 @@ async function SendToAllPlayers(data, SocketClients) {
 async function SendMessageToPlayersOnLobby(lobby, mensagem, SocketClients) {
     lobby.players.forEach(async element => {
         var player = SocketClients.NewPlayer[element];
-        if (!(player.Username.toLowerCase().includes("bot") || player.Username.toLowerCase().includes("cpu"))) {
-            var json = JSON.parse(mensagem);
-            if (json.Obstaculos != "")
+       // if (!(player.Username.toLowerCase().includes("bot") || player.Username.toLowerCase().includes("cpu"))) {
+         //   var json = JSON.parse(mensagem);
+           // if (json.Obstaculos != "")
                 await SendMessageToPlayer(mensagem, player.connection); //TODO: Certificar se está a funcionar!
-        } else
-            await SendMessageToPlayer(mensagem, player.connection);
+        //} else
+          //  await SendMessageToPlayer(mensagem, player.connection);
     });
 }
 
