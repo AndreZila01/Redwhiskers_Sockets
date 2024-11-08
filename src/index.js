@@ -83,4 +83,10 @@ io.on('connection', function (socket) {
     socket.on('OkReadyLobby', async function (data) {
         await FS.OkReadyLobby(JSON.parse(data.text), SocketClients, socket);
     });
+
+    socket.on('PingTest', async function (data) {
+        console.log('Hello!');
+        await FS.SendMessageToPlayer("Hello!", socket);
+
+    });
 });
