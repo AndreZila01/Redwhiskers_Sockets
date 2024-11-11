@@ -74,7 +74,7 @@ async function CreateLobby(Username, SocketClients) {
     //TODO: Meter uma condição que verifica se o hoster já está em algum lobby
 
     if (!await CheckIfUserAreHoster(idHoster, SocketClients)) {
-        SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: { EstadoJogador: [], JogadorReady: [] } });
+        SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: { EstadoJogador: [], JogadorReady: [], Obstaculos: [] } });
 
         await SendMessageToPlayer("Lobby criado com sucesso " + SocketClients.NewPlayer[idHoster].Username, SocketClients.NewPlayer[idHoster].connection);
     }
@@ -100,7 +100,6 @@ async function JoinLobby(Username, idLobby, SocketClients) {
     var idPlayer = await GetIdPlayer(Username, SocketClients);
     if (Username != "" && idLobby != undefined && parseInt(idLobby) > -1) {
         if (!await CheckIfUserAreOnLobby(Username, SocketClients)) {
-            //TODO: testar codigo acima! Não funciona!
             var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
             if (idGame != -1) {
                 SocketClients.NewGame[idLobby].players.push(idPlayer);
@@ -192,7 +191,7 @@ async function DisconnectOneUser(socket, SocketClients) {
 async function SendToAllPlayers(data, SocketClients) {
     SocketClients.NewPlayer.forEach(element => {
         //if (!(player.Username.toLowerCase().includes("bot") || player.Username.toLowerCase().includes("cpu")))
-            element.connection.emit('status', { content: data });
+        element.connection.emit('status', { content: data });
     });
 }
 
@@ -200,12 +199,13 @@ async function SendToAllPlayers(data, SocketClients) {
 async function SendMessageToPlayersOnLobby(lobby, mensagem, SocketClients) {
     lobby.players.forEach(async element => {
         var player = SocketClients.NewPlayer[element];
-       // if (!(player.Username.toLowerCase().includes("bot") || player.Username.toLowerCase().includes("cpu"))) {
-         //   var json = JSON.parse(mensagem);
-           // if (json.Obstaculos != "")
-                await SendMessageToPlayer(mensagem, player.connection); //TODO: Certificar se está a funcionar!
-        //} else
-          //  await SendMessageToPlayer(mensagem, player.connection);
+        if (!(player.Username.toLowerCase().includes("bot") || player.Username.toLowerCase().includes("cpu"))) {
+            var json = JSON.parse(mensagem);
+            if (json.Obstaculos != undefined)
+                mensagem = JSON.stringify(json.Obstaculos);
+            await SendMessageToPlayer(mensagem, player.connection);
+        } else
+            await SendMessageToPlayer(mensagem, player.connection);
     });
 }
 
@@ -215,7 +215,7 @@ async function SendMessageToPlayer(data, socket) {
 }
 
 // Função onde o server recebe informações do cliente!
-async function PingPongClient(data, socketactualclient, SocketClients) {
+async function PingPongClient(data, SocketClients) {
 
     var idClient = await GetIdPlayer(data.Username, SocketClients);
 
@@ -225,6 +225,21 @@ async function PingPongClient(data, socketactualclient, SocketClients) {
 
         if (lobby != -1) {
             var player = SocketClients.NewGame[lobby].statusGame.EstadoJogador.find(ws => ws.idPlayer == idClient);
+            
+            // Se o bot tiver coordenadas, ele vai adicionar a lista!
+            if (data.coordinates != undefined) {
+                //TODO: CHECK COM O RICARDO: guardar as coordenadas do bot 
+                let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
+                SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot.plush(data.coordinates);
+            }
+
+            // A cada 1 segundo o bot vai mover-se uma casa
+            if(SocketClients.NewPlayer[idClient].Username.toLowerCase().includes("bot") || SocketClients.NewPlayer[idClient].Username.toLowerCase().includes("cpu")){
+                let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
+                data.move = SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot[0];
+                SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot.splice(0, 1);
+            }
+
             if (data.move != undefined || data.move != "") {
 
                 data.move = "" + data.move;
@@ -241,13 +256,21 @@ async function PingPongClient(data, socketactualclient, SocketClients) {
                 player.distancia = Math.sqrt(Math.pow(player.x, 2) + Math.pow(player.y, 2));
 
             }
+
             var json = "{\"players\":[";
             SocketClients.NewGame[lobby].statusGame.EstadoJogador.forEach(element => {
                 json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}},`;
             });
 
-            json = json.substring(0, json.length - 1) + "],\"Obstaculos\":[{\"x\":0, \"y\":0, \"tipo\":1},{\"x\":0, \"y\":10, \"tipo\":1}]}";
+            var obstaculos = SocketClients.NewGame[lobby].statusGame.Obstaculos;
 
+            if (obstaculos.length == 0) {
+                //TODO: criar obstaculos
+                //'[{"x":0,"y":0,"tipo":1},{"x":0,"y":10,"tipo":1}]'
+            }
+
+            if (data.includes)
+                json = json.substring(0, json.length - 1) + `],\"Obstaculos\":[${JSON.stringify(obstaculos)}]}`;
 
             await SendMessageToPlayersOnLobby(SocketClients.NewGame[lobby], json, SocketClients);
         }
@@ -299,7 +322,7 @@ async function OkReadyLobby(data, SocketClients, socketclient) {
                     if (lobby.players.length == lobby.statusGame.JogadorReady.length) {
                         let json = ""
                         SocketClients.NewGame[idLobby].players.forEach(element => {
-                            json += `{\"idPlayer\":${element}, \"ready\":true, \"x\":0, \"y\":0, \"distancia\":0.0, \"personagem\":\"[]\", \"powerups\":\"[]\"},`;
+                            json += `{\"idPlayer\":${element}, \"ready\":true, \"x\":0, \"y\":0, \"distancia\":0.0, \"personagem\":\"[]\", \"powerups\":\"[]\", \"Query_Bot\":\"[]\"},`;
                         });
                         SocketClients.NewGame[idLobby].statusGame.EstadoJogador = (JSON.parse("[" + json.substring(0, json.length - 1) + "]"));
                         SocketClients.NewGame[idLobby].statusGame.EstadoJogador.sort((a, b) => parseFloat(a.idPlayer) - parseFloat(b.idPlayer));

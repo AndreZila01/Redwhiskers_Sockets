@@ -49,9 +49,7 @@ io.on('connection', function (socket) {
 
     socket.on('Ping', async function (data) {
         console.log(data);
-        var s = await FS.PingPongClient(JSON.parse(data.text), socket, SocketClients);
-        //await FS.SendToAllPlayers(s, SocketClients);
-        //Enviar data de todos os clientes que estão naquele server
+        var s = await FS.PingPongClient(JSON.parse(data.text), SocketClients);
     });
 
     socket.on('news', async function (data) {
