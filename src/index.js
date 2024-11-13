@@ -36,7 +36,11 @@ io.on('connection', function (socket) {
 
     socket.on('NewPlayer', async function (data) {
         data = JSON.parse(data.text);
-        var s = await FS.CheckSocketExisted(data.Username, socket, SocketClients);
+        var s = [];
+        data.Username = data.Username.replace(/ /g, '');
+
+        if (await FS.CheckNameAreValid(data.Username, data.Admin))
+            s = await FS.CheckSocketExisted(data.Username, socket, SocketClients);
 
         if (s.length != 0)
             await FS.AddPlayer(s[0], SocketClients);

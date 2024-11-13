@@ -55,6 +55,14 @@ async function ReturnIdOfLobby(SocketClients, idLobby) {
 async function ReturnWhereIsPlayer(idPlayer, SocketClients) {
     return SocketClients.NewGame.findIndex(ws => ws.players.includes(idPlayer));
 }
+
+async function CheckNameAreValid(Username, Admin) {
+    if (!Admin)
+        return Username.toLowerCase() == "" || Username.toLowerCase() == undefined || Username.toLowerCase() == "null" || Username.toLowerCase() == null || Username.toLowerCase() == "undefined" || Username.toLowerCase() == " " || Username.toLowerCase() == ` ` || Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot") || Username.toLowerCase().includes("ia") || Username.toLowerCase().includes("npc") || Username.toLowerCase().includes("player") || Username.toLowerCase().includes("jogador") || Username.toLowerCase().includes("teste") || Username.toLowerCase().includes("test") || Username.toLowerCase().includes("admin") || Username.toLowerCase().includes("adm") || Username.toLowerCase().includes("root") || Username.toLowerCase().includes("system") || Username.toLowerCase().includes("servidor") || Username.toLowerCase().includes("server") || Username.toLowerCase().includes("host") || Username.toLowerCase().includes("hospedeiro") || Username.toLowerCase().includes("hospedagem") || Username.toLowerCase().includes("hospedar") || Username.toLowerCase().includes("hospedado") || Username.toLowerCase().includes("administrador") || Username.toLowerCase().includes("administradora");
+    else
+        return true;
+}
+
 //#endregion
 
 //#region  Add Lista 
@@ -225,7 +233,7 @@ async function PingPongClient(data, SocketClients) {
 
         if (lobby != -1) {
             var player = SocketClients.NewGame[lobby].statusGame.EstadoJogador.find(ws => ws.idPlayer == idClient);
-            
+
             // Se o bot tiver coordenadas, ele vai adicionar a lista!
             if (data.coordinates != undefined) {
                 //TODO: CHECK COM O RICARDO: guardar as coordenadas do bot 
@@ -234,7 +242,7 @@ async function PingPongClient(data, SocketClients) {
             }
 
             // A cada 1 segundo o bot vai mover-se uma casa
-            if(SocketClients.NewPlayer[idClient].Username.toLowerCase().includes("bot") || SocketClients.NewPlayer[idClient].Username.toLowerCase().includes("cpu")){
+            if (SocketClients.NewPlayer[idClient].Username.toLowerCase().includes("bot") || SocketClients.NewPlayer[idClient].Username.toLowerCase().includes("cpu")) {
                 let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
                 data.move = SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot[0];
                 SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot.splice(0, 1);
@@ -372,5 +380,6 @@ module.exports = {
     RemovePlayer,
     RemoveLobby,
     DisconnectAllUsers,
-    DisconnectOneUser
+    DisconnectOneUser,
+    CheckNameAreValid,
 };
