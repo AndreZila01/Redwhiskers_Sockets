@@ -67,24 +67,28 @@ async function CheckNameAreValid(Username, Admin) {
 // Criar obstaculos
 async function CriarObstaculos() {
     let obstaculos = [];
-    for (let i = 0; i < 10; i++) {
-        let x = (Math.floor(Math.random() * 1000000) / 10000);
-        let y = (Math.floor(Math.random() * 1000000) / 10000);
-        let tipo = Math.floor(Math.random() * 30) / 10;
+    for (let i = 0; i < 20; i++) {
+        let x = parseInt((Math.random() * 5000000) / 50000);
+        let y = parseInt((Math.random() * 1000000) / 10000);
+        let tipo =parseInt((Math.random() * 300)/100);
 
         let index;
         if (tipo == 1)
-            index = obstaculos.findIndex(element => (element.x == x && element.y == y) || ((element.x > x - 5 && element.x < x + 5) && (element.y > y - 5 && element.y < y + 5)));//obstaculo 1x1
+            index = obstaculos.findIndex(element => ((element.x < x - 5 && element.x < x + 5) && (element.y < y - 5 && element.y < y + 5)));//obstaculo 1x1
         else if (tipo == 2)
-            index = obstaculos.findIndex(element => (element.x == x && element.y == y) || ((element.x > x - 5 && element.x < x + 5) && (element.y > y - 10 && element.y < y + 10)));//obstaculo 1x2
+            index = obstaculos.findIndex(element => ((element.x < x - 5 && element.x < x + 5) && (element.y < y - 10 && element.y < y + 10)));//obstaculo 1x2
         else if (tipo == 3)
-            index = obstaculos.findIndex(element => (element.x == x && element.y == y) || ((element.x > x - 10 && element.x < x + 10) && (element.y > y - 5 && element.y < y + 5)));//obstaculo 2x1
+            index = obstaculos.findIndex(element => ((element.x < x - 10 && element.x < x + 10) && (element.y < y - 5 && element.y < y + 5)));//obstaculo 2x1
+        else 
+            index = 0;
 
-        if (index != -1) {
+        if (index == -1 || obstaculos.findIndex(x => x.y == y) == -1) {
             obstaculos.push({ x: x, y: y, tipo: tipo });
         } else
             i--;
     }
+
+    obstaculos.sort((a, b) => parseInt(a.y) - parseInt(b.y));
     return obstaculos;
 }
 
@@ -405,5 +409,6 @@ module.exports = {
     RemoveLobby,
     DisconnectAllUsers,
     DisconnectOneUser,
+    CriarObstaculos,
     CheckNameAreValid,
 };

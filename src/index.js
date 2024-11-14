@@ -22,7 +22,10 @@ http.listen(Port, function () {
 });
 
 app.get('/', async function (req, res) {
-    await FS.SendToAllPlayers("Hello World", SocketClients);
+    
+    
+    // await FS.SendToAllPlayers("Hello World", SocketClients);
+    res.send(await FS.CriarObstaculos());
 });
 
 app.get('/startGame', async function (req, res) {
