@@ -87,7 +87,8 @@ io.on('connection', function (socket) {
     });
 
     socket.on('PingTest', async function (data) {
-        console.log('Hello!');
+        console.log('Hello! '+data.content);
+        console.log('Hello1! '+data);
         await FS.SendMessageToPlayer("Hello!", socket);
 
     });

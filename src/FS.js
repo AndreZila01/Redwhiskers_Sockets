@@ -56,11 +56,36 @@ async function ReturnWhereIsPlayer(idPlayer, SocketClients) {
     return SocketClients.NewGame.findIndex(ws => ws.players.includes(idPlayer));
 }
 
+// Verificar o nome do utilizador
 async function CheckNameAreValid(Username, Admin) {
     if (!Admin)
         return Username.toLowerCase() == "" || Username.toLowerCase() == undefined || Username.toLowerCase() == "null" || Username.toLowerCase() == null || Username.toLowerCase() == "undefined" || Username.toLowerCase() == " " || Username.toLowerCase() == ` ` || Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot") || Username.toLowerCase().includes("ia") || Username.toLowerCase().includes("npc") || Username.toLowerCase().includes("player") || Username.toLowerCase().includes("jogador") || Username.toLowerCase().includes("teste") || Username.toLowerCase().includes("test") || Username.toLowerCase().includes("admin") || Username.toLowerCase().includes("adm") || Username.toLowerCase().includes("root") || Username.toLowerCase().includes("system") || Username.toLowerCase().includes("servidor") || Username.toLowerCase().includes("server") || Username.toLowerCase().includes("host") || Username.toLowerCase().includes("hospedeiro") || Username.toLowerCase().includes("hospedagem") || Username.toLowerCase().includes("hospedar") || Username.toLowerCase().includes("hospedado") || Username.toLowerCase().includes("administrador") || Username.toLowerCase().includes("administradora");
     else
         return true;
+}
+
+// Criar obstaculos
+async function CriarObstaculos() {
+    let obstaculos = [];
+    for (let i = 0; i < 10; i++) {
+        let x = (Math.floor(Math.random() * 1000000) / 10000);
+        let y = (Math.floor(Math.random() * 1000000) / 10000);
+        let tipo = Math.floor(Math.random() * 30) / 10;
+
+        let index;
+        if (tipo == 1)
+            index = obstaculos.findIndex(element => (element.x == x && element.y == y) || ((element.x > x - 5 && element.x < x + 5) && (element.y > y - 5 && element.y < y + 5)));//obstaculo 1x1
+        else if (tipo == 2)
+            index = obstaculos.findIndex(element => (element.x == x && element.y == y) || ((element.x > x - 5 && element.x < x + 5) && (element.y > y - 10 && element.y < y + 10)));//obstaculo 1x2
+        else if (tipo == 3)
+            index = obstaculos.findIndex(element => (element.x == x && element.y == y) || ((element.x > x - 10 && element.x < x + 10) && (element.y > y - 5 && element.y < y + 5)));//obstaculo 2x1
+
+        if (index != -1) {
+            obstaculos.push({ x: x, y: y, tipo: tipo });
+        } else
+            i--;
+    }
+    return obstaculos;
 }
 
 //#endregion
@@ -192,8 +217,6 @@ async function DisconnectOneUser(socket, SocketClients) {
 }
 //#endregion
 
-//#region Funções void
-
 //#region Funções de envio e receber dados do cliente
 /* Função para informar todos os users */
 async function SendToAllPlayers(data, SocketClients) {
@@ -275,6 +298,7 @@ async function PingPongClient(data, SocketClients) {
             if (obstaculos.length == 0) {
                 //TODO: criar obstaculos
                 //'[{"x":0,"y":0,"tipo":1},{"x":0,"y":10,"tipo":1}]'
+                obstaculos = await CriarObstaculos();
             }
 
             if (data.includes)
