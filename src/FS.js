@@ -59,7 +59,7 @@ async function ReturnWhereIsPlayer(idPlayer, SocketClients) {
 // Verificar o nome do utilizador
 async function CheckNameAreValid(Username, Admin) {
     if (!Admin)
-        return Username.toLowerCase() == "" || Username.toLowerCase() == undefined || Username.toLowerCase() == "null" || Username.toLowerCase() == null || Username.toLowerCase() == "undefined" || Username.toLowerCase() == " " || Username.toLowerCase() == ` ` || Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot") || Username.toLowerCase().includes("ia") || Username.toLowerCase().includes("npc") || Username.toLowerCase().includes("player") || Username.toLowerCase().includes("jogador") || Username.toLowerCase().includes("teste") || Username.toLowerCase().includes("test") || Username.toLowerCase().includes("admin") || Username.toLowerCase().includes("adm") || Username.toLowerCase().includes("root") || Username.toLowerCase().includes("system") || Username.toLowerCase().includes("servidor") || Username.toLowerCase().includes("server") || Username.toLowerCase().includes("host") || Username.toLowerCase().includes("hospedeiro") || Username.toLowerCase().includes("hospedagem") || Username.toLowerCase().includes("hospedar") || Username.toLowerCase().includes("hospedado") || Username.toLowerCase().includes("administrador") || Username.toLowerCase().includes("administradora");
+        return !(Username.toLowerCase() == "" || Username.toLowerCase() == undefined || Username.toLowerCase() == "null" || Username.toLowerCase() == null || Username.toLowerCase() == "undefined" || Username.toLowerCase() == " " || Username.toLowerCase() == ` ` || Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot") || Username.toLowerCase().includes("ia") || Username.toLowerCase().includes("npc") || Username.toLowerCase().includes("player") || Username.toLowerCase().includes("jogador") || Username.toLowerCase().includes("teste") || Username.toLowerCase().includes("test") || Username.toLowerCase().includes("admin") || Username.toLowerCase().includes("adm") || Username.toLowerCase().includes("root") || Username.toLowerCase().includes("system") || Username.toLowerCase().includes("servidor") || Username.toLowerCase().includes("server") || Username.toLowerCase().includes("host") || Username.toLowerCase().includes("hospedeiro") || Username.toLowerCase().includes("hospedagem") || Username.toLowerCase().includes("hospedar") || Username.toLowerCase().includes("hospedado") || Username.toLowerCase().includes("administrador") || Username.toLowerCase().includes("administradora"));
     else
         return true;
 }
@@ -70,7 +70,7 @@ async function CriarObstaculos() {
     for (let i = 0; i < 20; i++) {
         let x = parseInt((Math.random() * 5000000) / 50000);
         let y = parseInt((Math.random() * 1000000) / 10000);
-        let tipo =parseInt((Math.random() * 300)/100);
+        let tipo = parseInt((Math.random() * 300) / 100);
 
         let index;
         if (tipo == 1)
@@ -79,7 +79,7 @@ async function CriarObstaculos() {
             index = obstaculos.findIndex(element => ((element.x < x - 5 && element.x < x + 5) && (element.y < y - 10 && element.y < y + 10)));//obstaculo 1x2
         else if (tipo == 3)
             index = obstaculos.findIndex(element => ((element.x < x - 10 && element.x < x + 10) && (element.y < y - 5 && element.y < y + 5)));//obstaculo 2x1
-        else 
+        else
             index = 0;
 
         if (index == -1 || obstaculos.findIndex(x => x.y == y) == -1) {
@@ -234,16 +234,16 @@ async function SendToAllPlayers(data, SocketClients) {
 async function SendMessageToPlayersOnLobby(lobby, mensagem, SocketClients) {
     lobby.players.forEach(async element => {
         var player = SocketClients.NewPlayer[element];
-        if (!(player.Username.toLowerCase().includes("bot") || player.Username.toLowerCase().includes("cpu"))) {
-            var json = JSON.parse(mensagem);
-            if (json.Obstaculos != undefined)
-                mensagem = JSON.stringify(json.Obstaculos);
-            await SendMessageToPlayer(mensagem, player.connection);
-        } else
+        // if (!CheckNameAreValid(player.Username)) {
+        //     // var json = JSON.parse(mensagem);
+        //     // if (json.Obstaculos != undefined)
+        //     //     mensagem = JSON.stringify(json.Obstaculos);
+        //     await SendMessageToPlayer(mensagem, player.connection);
+        // } else
             await SendMessageToPlayer(mensagem, player.connection);
     });
 }
-
+6
 /* Função para informar um user */
 async function SendMessageToPlayer(data, socket) {
     socket.emit('status', { content: data });
