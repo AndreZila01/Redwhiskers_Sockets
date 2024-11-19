@@ -59,7 +59,7 @@ async function ReturnWhereIsPlayer(idPlayer, SocketClients) {
 // Verificar o nome do utilizador
 async function CheckNameAreValid(Username, Admin) {
     if (!Admin)
-        return Username.toLowerCase() == "" || Username.toLowerCase() == undefined || Username.toLowerCase() == "null" || Username.toLowerCase() == null || Username.toLowerCase() == "undefined" || Username.toLowerCase() == " " || Username.toLowerCase() == ` ` || Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot") || Username.toLowerCase().includes("ia") || Username.toLowerCase().includes("npc") || Username.toLowerCase().includes("player") || Username.toLowerCase().includes("jogador") || Username.toLowerCase().includes("teste") || Username.toLowerCase().includes("test") || Username.toLowerCase().includes("admin") || Username.toLowerCase().includes("adm") || Username.toLowerCase().includes("root") || Username.toLowerCase().includes("system") || Username.toLowerCase().includes("servidor") || Username.toLowerCase().includes("server") || Username.toLowerCase().includes("host") || Username.toLowerCase().includes("hospedeiro") || Username.toLowerCase().includes("hospedagem") || Username.toLowerCase().includes("hospedar") || Username.toLowerCase().includes("hospedado") || Username.toLowerCase().includes("administrador") || Username.toLowerCase().includes("administradora");
+        return !(Username.toLowerCase() == "" || Username.toLowerCase() == undefined || Username.toLowerCase() == "null" || Username.toLowerCase() == null || Username.toLowerCase() == "undefined" || Username.toLowerCase() == " " || Username.toLowerCase() == ` ` || Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot") || Username.toLowerCase().includes("ia") || Username.toLowerCase().includes("npc") || Username.toLowerCase().includes("player") || Username.toLowerCase().includes("jogador") || Username.toLowerCase().includes("teste") || Username.toLowerCase().includes("test") || Username.toLowerCase().includes("admin") || Username.toLowerCase().includes("adm") || Username.toLowerCase().includes("root") || Username.toLowerCase().includes("system") || Username.toLowerCase().includes("servidor") || Username.toLowerCase().includes("server") || Username.toLowerCase().includes("host") || Username.toLowerCase().includes("hospedeiro") || Username.toLowerCase().includes("hospedagem") || Username.toLowerCase().includes("hospedar") || Username.toLowerCase().includes("hospedado") || Username.toLowerCase().includes("administrador") || Username.toLowerCase().includes("administradora"));
     else
         return true;
 }
@@ -239,16 +239,16 @@ async function SendToAllPlayers(data, SocketClients) {
 async function SendMessageToPlayersOnLobby(lobby, mensagem, SocketClients) {
     lobby.players.forEach(async element => {
         var player = SocketClients.NewPlayer[element];
-        if (!(player.Username.toLowerCase().includes("bot") || player.Username.toLowerCase().includes("cpu"))) {
-            var json = JSON.parse(mensagem);
-            if (json.Obstaculos != undefined)
-                mensagem = JSON.stringify(json.Obstaculos);
-            await SendMessageToPlayer(mensagem, player.connection);
-        } else
+        // if (!CheckNameAreValid(player.Username)) {
+        //     // var json = JSON.parse(mensagem);
+        //     // if (json.Obstaculos != undefined)
+        //     //     mensagem = JSON.stringify(json.Obstaculos);
+        //     await SendMessageToPlayer(mensagem, player.connection);
+        // } else
             await SendMessageToPlayer(mensagem, player.connection);
     });
 }
-
+6
 /* Função para informar um user */
 async function SendMessageToPlayer(data, socket) {
     socket.emit('status', { content: data });
