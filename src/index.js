@@ -21,9 +21,7 @@ http.listen(Port, function () {
     SocketClients = JSON.parse("{\"NewGame\": [], \"NewPlayer\":[]}");
 });
 
-app.get('/', async function (req, res) {
-    
-    
+app.get('/', async function (req, res) {    
     // await FS.SendToAllPlayers("Hello World", SocketClients);
     res.send(await FS.CriarObstaculos());
 });

@@ -70,19 +70,24 @@ async function CriarObstaculos() {
     for (let i = 0; i < 20; i++) {
         let x = parseInt((Math.random() * 5000000) / 50000);
         let y = parseInt((Math.random() * 1000000) / 10000);
-        let tipo =parseInt((Math.random() * 300)/100);
+        let tipo = parseInt((Math.random() * 300) / 100);
 
         let index;
-        if (tipo == 1)
-            index = obstaculos.findIndex(element => ((element.x < x - 5 && element.x < x + 5) && (element.y < y - 5 && element.y < y + 5)));//obstaculo 1x1
-        else if (tipo == 2)
-            index = obstaculos.findIndex(element => ((element.x < x - 5 && element.x < x + 5) && (element.y < y - 10 && element.y < y + 10)));//obstaculo 1x2
-        else if (tipo == 3)
-            index = obstaculos.findIndex(element => ((element.x < x - 10 && element.x < x + 10) && (element.y < y - 5 && element.y < y + 5)));//obstaculo 2x1
-        else 
-            index = 0;
+        obstaculos.forEach(element => {
+            if (tipo == 1)
+                index = (Math.abs(element.x - x) > 5 && Math.abs(element.y - y) < 5);//obstaculo 1x1
+            else if (tipo == 2)
+                index = (Math.abs(element.x - x) > 5 && Math.abs(element.y - y) > 10);//obstaculo 1x2
+            else if (tipo == 3)
+                index = (Math.abs(element.x - x) > 10 && Math.abs(element.y - y) > 5);//obstaculo 2x1
+            else
+                index = false;
 
-        if (index == -1 || obstaculos.findIndex(x => x.y == y) == -1) {
+            if (index)
+                return index;
+        });
+
+        if (index || obstaculos.length == 0) {
             obstaculos.push({ x: x, y: y, tipo: tipo });
         } else
             i--;
