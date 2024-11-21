@@ -97,6 +97,13 @@ async function CriarObstaculos() {
     return obstaculos;
 }
 
+async function checkColider(obstaculos, player, EstadoJogador){
+    //obstaculo 1x1 tipo 1
+    //obstaculo 1x2 tipo 2
+    //obstaculo 2x1 tipo 3
+
+    //TODO: fazer um check para ver se o jogador bateu em algum obstaculo!
+}
 //#endregion
 
 //#region  Add Lista 
@@ -245,7 +252,7 @@ async function SendMessageToPlayersOnLobby(lobby, mensagem, SocketClients) {
         //     //     mensagem = JSON.stringify(json.Obstaculos);
         //     await SendMessageToPlayer(mensagem, player.connection);
         // } else
-            await SendMessageToPlayer(mensagem, player.connection);
+        await SendMessageToPlayer(mensagem, player.connection);
     });
 }
 6
@@ -274,32 +281,32 @@ async function PingPongClient(data, SocketClients) {
             }
 
             // A cada 1 segundo o bot vai mover-se uma casa
-            if (SocketClients.NewPlayer[idClient].Username.toLowerCase().includes("bot") || SocketClients.NewPlayer[idClient].Username.toLowerCase().includes("cpu")) {
+            if (await CheckNameAreValid(SocketClients.NewPlayer[idClient].Username, true)) {
                 let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
                 data.move = SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot[0];
                 SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot.splice(0, 1);
             }
 
-            if (data.move != undefined || data.move != "") {
+            if (data.move != undefined || data.move != "" || data.move.toLowerCase() != "wait") {
 
                 data.move = "" + data.move;
 
-                if (data.move.toLowerCase() == "up")
+                if (data.move.toLowerCase() == "up" && player.y < 100)
                     player.y += 1;
-                else if (data.move.toLowerCase() == "down")
+                else if (data.move.toLowerCase() == "down" && player.y >= 0)
                     player.y -= 1;
-                else if (data.move.toLowerCase() == "left")
+                else if (data.move.toLowerCase() == "left" && player.x >= 0)
                     player.x -= 1;
-                else if (data.move.toLowerCase() == "right")
+                else if (data.move.toLowerCase() == "right" && player.x < 100)
                     player.x += 1;
 
-                player.distancia = Math.sqrt(Math.pow(player.x, 2) + Math.pow(player.y, 2));
-
+                // player.distancia = Math.sqrt(Math.pow(player.x, 2) + Math.pow(player.y, 2));
             }
-
+            player.distancia++;
+            
             var json = "{\"players\":[";
             SocketClients.NewGame[lobby].statusGame.EstadoJogador.forEach(element => {
-                json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}},`;
+                json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}, \"Alive\": ${element.Alive}},`;
             });
 
             var obstaculos = SocketClients.NewGame[lobby].statusGame.Obstaculos;
@@ -308,6 +315,12 @@ async function PingPongClient(data, SocketClients) {
                 //TODO: criar obstaculos
                 //'[{"x":0,"y":0,"tipo":1},{"x":0,"y":10,"tipo":1}]'
                 obstaculos = await CriarObstaculos();
+            }
+
+            var alive= await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
+
+            if(!alive){
+                /* TODO: Se o jogador bater em algum obstaculo fazer algo */
             }
 
             if (data.includes)
@@ -363,7 +376,7 @@ async function OkReadyLobby(data, SocketClients, socketclient) {
                     if (lobby.players.length == lobby.statusGame.JogadorReady.length) {
                         let json = ""
                         SocketClients.NewGame[idLobby].players.forEach(element => {
-                            json += `{\"idPlayer\":${element}, \"ready\":true, \"x\":0, \"y\":0, \"distancia\":0.0, \"personagem\":\"[]\", \"powerups\":\"[]\", \"Query_Bot\":\"[]\"},`;
+                            json += `{\"idPlayer\":${element}, \"ready\":true, \"x\":0, \"y\":0, \"distancia\":0.0, \"personagem\":\"[]\", \"powerups\":\"[]\", \"Query_Bot\":\"[]\", \"Alive\":true},`;
                         });
                         SocketClients.NewGame[idLobby].statusGame.EstadoJogador = (JSON.parse("[" + json.substring(0, json.length - 1) + "]"));
                         SocketClients.NewGame[idLobby].statusGame.EstadoJogador.sort((a, b) => parseFloat(a.idPlayer) - parseFloat(b.idPlayer));
