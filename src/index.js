@@ -1,12 +1,15 @@
-var express = require('express');
-const { Socket } = require('socket.io');
-var app = express();
 require('dotenv').config();
-var http = require('http').createServer(app);
-var io = require('socket.io')(http); // Initialize Socket.io
-console.log(process.env.Port);
-const Port = parseInt(process.env.Port);
 const FS = require('./FS.js');
+const {Server} = require('socket.io');
+
+const Port = parseInt(process.env.Port);
+
+const io = new Server (Port, {
+    cors: {
+        origin: '*',
+        methods: ["GET", "POST"]
+    }
+});
 
 /*
 DONE: Haver comandos e receber do cliente "Up", "Down", "Left", "Right" e enviar para todos os clientes/bot, não receber coordenadas
@@ -14,24 +17,7 @@ TODO: O server só receber as coordenadas do bot, mas o cliente é normal. E cas
 TODO: receber do bot uma query das posições futuras da ia.
 */
 
-http.listen(Port, function () {
-
-    // var s = (require('./class.js'));
-    console.log(`listening on *:${Port}`);
-    SocketClients = JSON.parse("{\"NewGame\": [], \"NewPlayer\":[]}");
-});
-
-app.get('/', async function (req, res) {    
-    // await FS.SendToAllPlayers("Hello World", SocketClients);
-    res.send(await FS.CriarObstaculos());
-});
-
-app.get('/startGame', async function (req, res) {
-    await FS.SendToAllPlayers("startGame", SocketClients);
-});
-
-let SocketClients = [];
-//SocketClients.NewGame.push({idGame: 1, dateTime: new Date, players: [], active: false});
+let SocketClients = JSON.parse("{\"NewGame\": [], \"NewPlayer\":[]}");
 io.on('connection', function (socket) {
     console.log('a user connected');
 
@@ -43,7 +29,7 @@ io.on('connection', function (socket) {
         if (await FS.CheckNameAreValid(data.Username, data.Admin))
             s = await FS.CheckSocketExisted(data.Username, socket, SocketClients);
 
-        if (s.length != 0)
+        if (s.length !== 0)
             await FS.AddPlayer(s[0], SocketClients);
         else {
             await FS.SendMessageToPlayer("Já existe um jogador com esse nome ou ip", socket);
@@ -54,7 +40,7 @@ io.on('connection', function (socket) {
 
     socket.on('Ping', async function (data) {
         console.log(data);
-        var s = await FS.PingPongClient(JSON.parse(data.text), SocketClients);
+        await FS.PingPongClient(JSON.parse(data.text), SocketClients);
     });
 
     socket.on('news', async function (data) {
@@ -62,9 +48,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('disconnect', async function (data) {
-        //console.log(`${socket.intentionalDisconnect} - ${SocketClients.NewPlayer.length}`);
-        //SocketClients.NewPlayer.length != 0 && socket.intentionalDisconnect=="false"
-        if (!socket.intentionalDisconnect && SocketClients.NewPlayer.length != 0)
+        if (!socket.intentionalDisconnect && SocketClients.NewPlayer.length !== 0)
             await FS.DisconnectOneUser(socket, SocketClients);
     });
 
