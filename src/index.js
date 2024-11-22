@@ -2,7 +2,7 @@ require('dotenv').config();
 const FS = require('./FS.js');
 const {Server} = require('socket.io');
 
-const Port = parseInt(process.env.Port);
+const Port = process.env.Port;
 
 const io = new Server (Port, {
     cors: {
@@ -10,6 +10,8 @@ const io = new Server (Port, {
         methods: ["GET", "POST"]
     }
 });
+console.log("Server Started on port :" + Port)
+
 
 /*
 DONE: Haver comandos e receber do cliente "Up", "Down", "Left", "Right" e enviar para todos os clientes/bot, não receber coordenadas
