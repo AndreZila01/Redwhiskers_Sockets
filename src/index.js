@@ -1,17 +1,18 @@
-require('dotenv').config();
 const FS = require('./FS.js');
-const {Server} = require('socket.io');
+const { Server } = require('socket.io');
+let Port;
 
-const Port = process.env.Port;
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+Port = parseInt(process.env.Port);
+console.log(Port);
 
-const io = new Server (Port, {
+const io = new Server(Port, {
     cors: {
         origin: '*',
         methods: ["GET", "POST"]
     }
 });
-console.log("Server Started on port :" + Port)
-
 
 /*
 DONE: Haver comandos e receber do cliente "Up", "Down", "Left", "Right" e enviar para todos os clientes/bot, não receber coordenadas
@@ -28,7 +29,7 @@ io.on('connection', function (socket) {
         var s = [];
         data.Username = data.Username.replace(/ /g, '');
 
-        if (await FS.CheckNameAreValid(data.Username, data.Admin))
+        if (await FS.CheckNameAreValid(data.Username, data.Admin, "StartGame"))
             s = await FS.CheckSocketExisted(data.Username, socket, SocketClients);
 
         if (s.length !== 0)
@@ -74,8 +75,8 @@ io.on('connection', function (socket) {
     });
 
     socket.on('PingTest', async function (data) {
-        console.log('Hello! '+data.content);
-        console.log('Hello1! '+data);
+        console.log('Hello! ' + data.content);
+        console.log('Hello1! ' + data);
         await FS.SendMessageToPlayer("Hello!", socket);
 
     });

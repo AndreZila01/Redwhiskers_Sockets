@@ -57,9 +57,18 @@ async function ReturnWhereIsPlayer(idPlayer, SocketClients) {
 }
 
 // Verificar o nome do utilizador
-async function CheckNameAreValid(Username, Admin) {
-    if (!Admin)
-        return !(Username.toLowerCase() == "" || Username.toLowerCase() == undefined || Username.toLowerCase() == "null" || Username.toLowerCase() == null || Username.toLowerCase() == "undefined" || Username.toLowerCase() == " " || Username.toLowerCase() == ` ` || Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot") || Username.toLowerCase().includes("ia") || Username.toLowerCase().includes("npc") || Username.toLowerCase().includes("player") || Username.toLowerCase().includes("jogador") || Username.toLowerCase().includes("teste") || Username.toLowerCase().includes("test") || Username.toLowerCase().includes("admin") || Username.toLowerCase().includes("adm") || Username.toLowerCase().includes("root") || Username.toLowerCase().includes("system") || Username.toLowerCase().includes("servidor") || Username.toLowerCase().includes("server") || Username.toLowerCase().includes("host") || Username.toLowerCase().includes("hospedeiro") || Username.toLowerCase().includes("hospedagem") || Username.toLowerCase().includes("hospedar") || Username.toLowerCase().includes("hospedado") || Username.toLowerCase().includes("administrador") || Username.toLowerCase().includes("administradora"));
+async function CheckNameAreValid(Username, Admin, StatusGame) {
+    //FIXME: Meter uma variavel a explicar qual o ponto do codigo onde estás!
+    if (!Admin){
+        var check = !(Username.toLowerCase() == "" || Username.toLowerCase() == undefined || Username.toLowerCase() == "null" || Username.toLowerCase() == null || Username.toLowerCase() == "undefined" || Username.toLowerCase() == " " || Username.toLowerCase() == ` ` || Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot") || Username.toLowerCase().includes("ia") || Username.toLowerCase().includes("npc") || Username.toLowerCase().includes("player") || Username.toLowerCase().includes("jogador") || Username.toLowerCase().includes("teste") || Username.toLowerCase().includes("test") || Username.toLowerCase().includes("admin") || Username.toLowerCase().includes("adm") || Username.toLowerCase().includes("root") || Username.toLowerCase().includes("system") || Username.toLowerCase().includes("servidor") || Username.toLowerCase().includes("server") || Username.toLowerCase().includes("host") || Username.toLowerCase().includes("hospedeiro") || Username.toLowerCase().includes("hospedagem") || Username.toLowerCase().includes("hospedar") || Username.toLowerCase().includes("hospedado") || Username.toLowerCase().includes("administrador") || Username.toLowerCase().includes("administradora"));
+
+        if(StatusGame == "OnGame" && check==false)
+            return true;
+        else if(StatusGame == "OnGame")
+            return false;
+        else 
+            return check;
+    }
     else
         return true;
 }
@@ -97,7 +106,7 @@ async function CriarObstaculos() {
     return obstaculos;
 }
 
-async function checkColider(obstaculos, player, EstadoJogador){
+async function checkColider(obstaculos, player, EstadoJogador) {
     //obstaculo 1x1 tipo 1
     //obstaculo 1x2 tipo 2
     //obstaculo 2x1 tipo 3
@@ -119,8 +128,6 @@ async function CreateLobby(Username, SocketClients) {
     var idHoster = await GetIdPlayer(Username, SocketClients);
     var idLobby = await NewIdLobby(SocketClients);
     console.log(idHoster + " " + idLobby);
-
-    //TODO: Meter uma condição que verifica se o hoster já está em algum lobby
 
     if (!await CheckIfUserAreHoster(idHoster, SocketClients)) {
         SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: { EstadoJogador: [], JogadorReady: [], Obstaculos: [] } });
@@ -229,7 +236,6 @@ async function DisconnectOneUser(socket, SocketClients) {
     }
 
     await RemovePlayer(index, SocketClients);
-    //TODO: apagar o user da lista
 }
 //#endregion
 
@@ -281,7 +287,7 @@ async function PingPongClient(data, SocketClients) {
             }
 
             // A cada 1 segundo o bot vai mover-se uma casa
-            if (await CheckNameAreValid(SocketClients.NewPlayer[idClient].Username, true)) {
+            if (await CheckNameAreValid(SocketClients.NewPlayer[idClient].Username, true, "OnGame")) {
                 let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
                 data.move = SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot[0];
                 SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot.splice(0, 1);
@@ -303,7 +309,7 @@ async function PingPongClient(data, SocketClients) {
                 // player.distancia = Math.sqrt(Math.pow(player.x, 2) + Math.pow(player.y, 2));
             }
             player.distancia++;
-            
+
             var json = "{\"players\":[";
             SocketClients.NewGame[lobby].statusGame.EstadoJogador.forEach(element => {
                 json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}, \"Alive\": ${element.Alive}},`;
@@ -317,14 +323,13 @@ async function PingPongClient(data, SocketClients) {
                 obstaculos = await CriarObstaculos();
             }
 
-            var alive= await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
+            var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
 
-            if(!alive){
+            if (!alive) {
                 /* TODO: Se o jogador bater em algum obstaculo fazer algo */
             }
 
-            if (data.includes)
-                json = json.substring(0, json.length - 1) + `],\"Obstaculos\":[${JSON.stringify(obstaculos)}]}`;
+            json = json.substring(0, json.length - 1) + `],\"Obstaculos\":[${JSON.stringify(obstaculos)}]}`;
 
             await SendMessageToPlayersOnLobby(SocketClients.NewGame[lobby], json, SocketClients);
         }
@@ -365,8 +370,8 @@ async function OkReadyLobby(data, SocketClients, socketclient) {
             var lobby = SocketClients.NewGame[idLobby];
             var idUser = await GetIdPlayer(data.Username, SocketClients);
             if (!lobby.statusGame.JogadorReady.includes(idUser)) {
-                if (lobby.statusGame.JogadorReady.length == 1 && lobby.players.length == 1) {
-                    await SendMessageToPlayer(SocketClients.NewPlayer[idUser].connection, "Para o jogo começar tem de ter pelo menos 1 jogador!",);
+                if (lobby.players.length == 1) {
+                    await SendMessageToPlayer("Para o jogo começar tem de ter pelo menos 1 jogador!", SocketClients.NewPlayer[idUser].connection);
                 }
                 else {
                     lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
@@ -421,7 +426,8 @@ module.exports = {
     OkReadyLobby,
     CheckIfUserAreOnLobby,
     FindSocket,
-    NewIdLobby, ReturnListOfLobbys,
+    NewIdLobby, 
+    ReturnListOfLobbys,
     AddPlayer,
     RemovePlayer,
     RemoveLobby,
