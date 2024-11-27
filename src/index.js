@@ -31,6 +31,11 @@ io.on('connection', function (socket) {
 
         if (await FS.CheckNameAreValid(data.Username, data.Admin, "StartGame"))
             s = await FS.CheckSocketExisted(data.Username, socket, SocketClients);
+        else {
+            await FS.SendMessageToPlayer("Nome de jogador inválido", socket);
+            socket.intentionalDisconnect = "false";
+            socket.disconnect();
+        }
 
         if (s.length !== 0)
             await FS.AddPlayer(s[0], SocketClients);
@@ -74,10 +79,18 @@ io.on('connection', function (socket) {
         await FS.OkReadyLobby(JSON.parse(data.text), SocketClients, socket);
     });
 
-    socket.on('PingTest', async function (data) {
-        console.log('Hello! ' + data.content);
-        console.log('Hello1! ' + data);
-        await FS.SendMessageToPlayer("Hello!", socket);
+    socket.on('TestJson', async function (data) {
+
+        SocketClients.NewPlayer = [{ id: 0, Username: Username, score: 0, active: false, connection: socket }];
+
+        data.coordinates.forEach(async element => {
+            var s = await PingPongClientTeste(element, SocketClients);
+
+            if (s == "Estado: false") {
+                await SendMessageToPlayer("Colisão", socket);
+                return 0;
+            }
+        });
 
     });
 });

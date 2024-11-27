@@ -59,14 +59,14 @@ async function ReturnWhereIsPlayer(idPlayer, SocketClients) {
 // Verificar o nome do utilizador
 async function CheckNameAreValid(Username, Admin, StatusGame) {
     //FIXME: Meter uma variavel a explicar qual o ponto do codigo onde estás!
-    if (!Admin){
+    if (!Admin) {
         var check = !(Username.toLowerCase() == "" || Username.toLowerCase() == undefined || Username.toLowerCase() == "null" || Username.toLowerCase() == null || Username.toLowerCase() == "undefined" || Username.toLowerCase() == " " || Username.toLowerCase() == ` ` || Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot") || Username.toLowerCase().includes("ia") || Username.toLowerCase().includes("npc") || Username.toLowerCase().includes("player") || Username.toLowerCase().includes("jogador") || Username.toLowerCase().includes("teste") || Username.toLowerCase().includes("test") || Username.toLowerCase().includes("admin") || Username.toLowerCase().includes("adm") || Username.toLowerCase().includes("root") || Username.toLowerCase().includes("system") || Username.toLowerCase().includes("servidor") || Username.toLowerCase().includes("server") || Username.toLowerCase().includes("host") || Username.toLowerCase().includes("hospedeiro") || Username.toLowerCase().includes("hospedagem") || Username.toLowerCase().includes("hospedar") || Username.toLowerCase().includes("hospedado") || Username.toLowerCase().includes("administrador") || Username.toLowerCase().includes("administradora"));
 
-        if(StatusGame == "OnGame" && check==false)
+        if (StatusGame == "OnGame" && check == false)
             return true;
-        else if(StatusGame == "OnGame")
+        else if (StatusGame == "OnGame")
             return false;
-        else 
+        else
             return check;
     }
     else
@@ -112,6 +112,24 @@ async function checkColider(obstaculos, player, EstadoJogador) {
     //obstaculo 2x1 tipo 3
 
     //TODO: fazer um check para ver se o jogador bateu em algum obstaculo!
+
+    switch (obstaculos[0].tipo) {
+        case 1:
+            if (player.x == obstaculos[0].x && player.y == obstaculos[0].y)
+                return false;
+            break;
+        case 2:
+            if ((player.x == obstaculos[0].x && player.y == obstaculos[0].y) || (player.x == obstaculos[0].x && player.y == obstaculos[0].y + 1))
+                return false;
+            break;
+        case 3:
+            if ((player.x == obstaculos[0].x && player.y == obstaculos[0].y) || (player.x == obstaculos[0].x + 1 && player.y == obstaculos[0].y))
+                return false;
+            break;
+        default:
+            break;
+    }
+
 }
 //#endregion
 
@@ -283,7 +301,9 @@ async function PingPongClient(data, SocketClients) {
             if (data.coordinates != undefined) {
                 //TODO: CHECK COM O RICARDO: guardar as coordenadas do bot 
                 let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
+                SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot = [];
                 SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot.plush(data.coordinates);
+
             }
 
             // A cada 1 segundo o bot vai mover-se uma casa
@@ -310,11 +330,6 @@ async function PingPongClient(data, SocketClients) {
             }
             player.distancia++;
 
-            var json = "{\"players\":[";
-            SocketClients.NewGame[lobby].statusGame.EstadoJogador.forEach(element => {
-                json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}, \"Alive\": ${element.Alive}},`;
-            });
-
             var obstaculos = SocketClients.NewGame[lobby].statusGame.Obstaculos;
 
             if (obstaculos.length == 0) {
@@ -326,8 +341,14 @@ async function PingPongClient(data, SocketClients) {
             var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
 
             if (!alive) {
+                player.Alive = false;
                 /* TODO: Se o jogador bater em algum obstaculo fazer algo */
             }
+
+            var json = "{\"players\":[";
+            SocketClients.NewGame[lobby].statusGame.EstadoJogador.forEach(element => {
+                json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}, \"Alive\": ${element.Alive}},`;
+            });
 
             json = json.substring(0, json.length - 1) + `],\"Obstaculos\":[${JSON.stringify(obstaculos)}]}`;
 
@@ -413,6 +434,91 @@ async function ReturnListOfLobbys(SocketClients, socket) {
 //#endregion
 
 
+// Função onde o server recebe informações do cliente!
+async function PingPongClientTeste(data, SocketClients) {
+
+    var idClient = await GetIdPlayer(data.Username, SocketClients);
+
+    if (idClient != -1) {
+        var idLobby = await ReturnWhereIsPlayer(idClient, SocketClients);
+        var lobby = await ReturnIdOfLobby(SocketClients, idLobby);
+
+        if (lobby != -1) {
+            var player = SocketClients.NewGame[lobby].statusGame.EstadoJogador.find(ws => ws.idPlayer == idClient);
+
+            // Se o bot tiver coordenadas, ele vai adicionar a lista!
+            if (data.coordinates != undefined) {
+                //TODO: CHECK COM O RICARDO: guardar as coordenadas do bot 
+                let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
+                SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot = [];
+                SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot.plush(data.coordinates);
+
+            }
+
+            // A cada 1 segundo o bot vai mover-se uma casa
+            if (await CheckNameAreValid(SocketClients.NewPlayer[idClient].Username, true, "OnGame")) {
+                let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
+                data.move = SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot[0];
+                SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot.splice(0, 1);
+            }
+
+            if (data.move != undefined || data.move != "" || data.move.toLowerCase() != "wait") {
+
+                data.move = "" + data.move;
+
+                if (data.move.toLowerCase() == "up" && player.y < 100)
+                    player.y += 1;
+                else if (data.move.toLowerCase() == "down" && player.y >= 0)
+                    player.y -= 1;
+                else if (data.move.toLowerCase() == "left" && player.x >= 0)
+                    player.x -= 1;
+                else if (data.move.toLowerCase() == "right" && player.x < 100)
+                    player.x += 1;
+
+                // player.distancia = Math.sqrt(Math.pow(player.x, 2) + Math.pow(player.y, 2));
+            }
+            player.distancia++;
+
+            var obstaculos = SocketClients.NewGame[lobby].statusGame.Obstaculos;
+
+            if (obstaculos.length == 0) {
+                //TODO: criar obstaculos
+                //'[{"x":0,"y":0,"tipo":1},{"x":0,"y":10,"tipo":1}]'
+                obstaculos = await CriarObstaculos();
+            }
+
+            var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
+
+            if (!alive) {
+                player.Alive = false;
+                /* TODO: Se o jogador bater em algum obstaculo fazer algo */
+            }
+
+            var json = "{\"players\":[";
+            SocketClients.NewGame[lobby].statusGame.EstadoJogador.forEach(element => {
+                json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}, \"Alive\": ${element.Alive}},`;
+            });
+
+            json = json.substring(0, json.length - 1) + `],\"Obstaculos\":[${JSON.stringify(obstaculos)}]}`;
+
+            await SendMessageToPlayersOnLobby(SocketClients.NewGame[lobby], json, SocketClients);
+        }
+    }
+    //SocketClients.NewGame[data.idLobby].statusGame.EstadoJogador
+
+
+    //TODO: Verificar se o player está no lobby
+    //TODO: receber o id do lobby
+    //TODO: atualizar dados do atual player
+    //TOOD: Enviar dados para todos os players do lobby
+
+
+
+
+    //Enviar data de todos os clientes que estão naquele server
+}
+
+
 module.exports = {
     CheckSocketExisted,
     PingPongClient,
@@ -426,7 +532,7 @@ module.exports = {
     OkReadyLobby,
     CheckIfUserAreOnLobby,
     FindSocket,
-    NewIdLobby, 
+    NewIdLobby,
     ReturnListOfLobbys,
     AddPlayer,
     RemovePlayer,
@@ -435,4 +541,6 @@ module.exports = {
     DisconnectOneUser,
     CriarObstaculos,
     CheckNameAreValid,
+    //Test
+    PingPongClientTeste,
 };
