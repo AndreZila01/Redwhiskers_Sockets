@@ -1,6 +1,7 @@
 const FS = require('./FS.js');
 const { Server } = require('socket.io');
 let Port;
+let IASocket;
 
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
@@ -23,6 +24,9 @@ TODO: receber do bot uma query das posições futuras da ia.
 let SocketClients = JSON.parse("{\"NewGame\": [], \"NewPlayer\":[]}");
 io.on('connection', function (socket) {
     console.log('a user connected');
+
+    if (socket.IaSocket != "IASuuperMegaFixeUasah")
+        IASocket = socket;
 
     socket.on('NewPlayer', async function (data) {
         data = JSON.parse(data.text);
@@ -56,8 +60,12 @@ io.on('connection', function (socket) {
     });
 
     socket.on('disconnect', async function (data) {
-        if (!socket.intentionalDisconnect && SocketClients.NewPlayer.length !== 0)
-            await FS.DisconnectOneUser(socket, SocketClients);
+        try {
+            if (!socket.intentionalDisconnect && SocketClients.NewPlayer.length !== 0)
+                await FS.DisconnectOneUser(socket, SocketClients);
+        } catch {
+            console.log("Erro no disconnect");
+        }
     });
 
     socket.on('CreateLobby', async function (data) {
@@ -79,18 +87,27 @@ io.on('connection', function (socket) {
         await FS.OkReadyLobby(JSON.parse(data.text), SocketClients, socket);
     });
 
+
+    socket.on('TestObject', async function (data) {
+        SocketClients.NewPlayer.push({ id: 0, Username: "BotM1", score: 0, active: false, connection: socket });
+        SocketClients.NewGame.push({ idGame: 0, dateTime: new Date, players: [0], active: false, statusGame: { EstadoJogador: [{ idPlayer: 0, x: 0, y: 0, distancia: 0, personagem: [], powerups: [], Alive: true }], JogadorReady: [], Obstaculos: await FS.CriarObstaculos() } });
+        console.log(`{\"data\":[{\"UserBot\":\"${SocketClients.NewPlayer[0].Username}\",\"Obstaculos\":${JSON.stringify(SocketClients.NewGame[0].statusGame.Obstaculos)}}]}`);
+        IASocket.emit('bot1', `{\"data\":[{\"UserBot\":\"${SocketClients.NewPlayer[0].Username}\",\"Obstaculos\":${JSON.stringify(SocketClients.NewGame[0].statusGame.Obstaculos)}}]}`);
+        console.log("TestObject");
+    });
+
     socket.on('TestJson', async function (data) {
 
-        SocketClients.NewPlayer = [{ id: 0, Username: Username, score: 0, active: false, connection: socket }];
-
-        data.coordinates.forEach(async element => {
-            var s = await PingPongClientTeste(element, SocketClients);
+        await FS.PingPongClientTeste(data, SocketClients);
+        /*.split("\",").forEach(async element => {
+            var s = await FS.PingPongClientTeste(element.replace("[\"").replace(/\"/g, ''), SocketClients);
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             if (s == "Estado: false") {
                 await SendMessageToPlayer("Colisão", socket);
                 return 0;
             }
-        });
+        });*/
 
     });
 });

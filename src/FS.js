@@ -58,7 +58,6 @@ async function ReturnWhereIsPlayer(idPlayer, SocketClients) {
 
 // Verificar o nome do utilizador
 async function CheckNameAreValid(Username, Admin, StatusGame) {
-    //FIXME: Meter uma variavel a explicar qual o ponto do codigo onde estás!
     if (!Admin) {
         var check = !(Username.toLowerCase() == "" || Username.toLowerCase() == undefined || Username.toLowerCase() == "null" || Username.toLowerCase() == null || Username.toLowerCase() == "undefined" || Username.toLowerCase() == " " || Username.toLowerCase() == ` ` || Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot") || Username.toLowerCase().includes("ia") || Username.toLowerCase().includes("npc") || Username.toLowerCase().includes("player") || Username.toLowerCase().includes("jogador") || Username.toLowerCase().includes("teste") || Username.toLowerCase().includes("test") || Username.toLowerCase().includes("admin") || Username.toLowerCase().includes("adm") || Username.toLowerCase().includes("root") || Username.toLowerCase().includes("system") || Username.toLowerCase().includes("servidor") || Username.toLowerCase().includes("server") || Username.toLowerCase().includes("host") || Username.toLowerCase().includes("hospedeiro") || Username.toLowerCase().includes("hospedagem") || Username.toLowerCase().includes("hospedar") || Username.toLowerCase().includes("hospedado") || Username.toLowerCase().includes("administrador") || Username.toLowerCase().includes("administradora"));
 
@@ -77,12 +76,17 @@ async function CheckNameAreValid(Username, Admin, StatusGame) {
 async function CriarObstaculos() {
     let obstaculos = [];
     for (let i = 0; i < 20; i++) {
-        let x = parseInt((Math.random() * 5000000) / 50000);
-        let y = parseInt((Math.random() * 1000000) / 10000);
+        // 70 x 100
+        let x = parseInt((Math.random() * 690000000) / 6900000);
+        let y = parseInt((Math.random() * 990000000) / 9900000);
         let tipo = parseInt((Math.random() * 300) / 100);
 
         let index;
         obstaculos.forEach(element => {
+
+            if (tipo == 0)
+                tipo = 1;
+
             if (tipo == 1)
                 index = (Math.abs(element.x - x) > 5 && Math.abs(element.y - y) < 5);//obstaculo 1x1
             else if (tipo == 2)
@@ -96,14 +100,15 @@ async function CriarObstaculos() {
                 return index;
         });
 
-        if (index || obstaculos.length == 0) {
-            obstaculos.push({ x: x, y: y, tipo: tipo });
+        if ((x > -1 && x < 70 && y > -1 && y < 100) && (obstaculos.length == 0 || index)) {
+            obstaculos.push({ y: y, x: x, tipo: tipo });
         } else
             i--;
     }
 
     obstaculos.sort((a, b) => parseInt(a.y) - parseInt(b.y));
     return obstaculos;
+
 }
 
 async function checkColider(obstaculos, player, EstadoJogador) {
@@ -159,10 +164,11 @@ async function CreateLobby(Username, SocketClients) {
 /* Verifica se o Socket já está ligado! */
 async function CheckSocketExisted(Username, socket, SocketClients) {
     if (await FindSocket(socket, Username, SocketClients) == -1) {
-        if (!(Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot")))
-            return [{ id: SocketClients.NewPlayer.length, Username: Username, score: 0, active: false, connection: socket }];
+        //FIX: Wainting to connect to database to use id     
+        if (Username.toLowerCase().includes("cpu") || Username.toLowerCase().includes("bot"))
+            return [{ id: SocketClients.NewPlayer.length, Username: Username, score: 0, active: false, connection: socket, BotMoves: [] }];
         else
-            return [{ id: SocketClients.NewPlayer.length, Username: Username, score: 0, active: false, connection: socket, BotMovies: [] }];
+            return [{ id: SocketClients.NewPlayer.length, Username: Username, score: 0, active: false, connection: socket }];
     }
     else
         return [];
@@ -323,7 +329,7 @@ async function PingPongClient(data, SocketClients) {
                     player.y -= 1;
                 else if (data.move.toLowerCase() == "left" && player.x >= 0)
                     player.x -= 1;
-                else if (data.move.toLowerCase() == "right" && player.x < 100)
+                else if (data.move.toLowerCase() == "right" && player.x < 70)
                     player.x += 1;
 
                 // player.distancia = Math.sqrt(Math.pow(player.x, 2) + Math.pow(player.y, 2));
@@ -336,12 +342,14 @@ async function PingPongClient(data, SocketClients) {
                 //TODO: criar obstaculos
                 //'[{"x":0,"y":0,"tipo":1},{"x":0,"y":10,"tipo":1}]'
                 obstaculos = await CriarObstaculos();
+                SocketClients.NewGame[lobby].statusGame.Obstaculos = obstaculos;
             }
 
             var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
 
             if (!alive) {
                 player.Alive = false;
+                await SendMessageToPlayer("GAME OVER, Você morreu!", SocketClients.NewPlayer[idClient].connection);
                 /* TODO: Se o jogador bater em algum obstaculo fazer algo */
             }
 
@@ -437,7 +445,7 @@ async function ReturnListOfLobbys(SocketClients, socket) {
 // Função onde o server recebe informações do cliente!
 async function PingPongClientTeste(data, SocketClients) {
 
-    var idClient = await GetIdPlayer(data.Username, SocketClients);
+    var idClient = 0;//await GetIdPlayer(data.Username, SocketClients);
 
     if (idClient != -1) {
         var idLobby = await ReturnWhereIsPlayer(idClient, SocketClients);
@@ -481,6 +489,7 @@ async function PingPongClientTeste(data, SocketClients) {
 
             var obstaculos = SocketClients.NewGame[lobby].statusGame.Obstaculos;
 
+            SocketClients.NewGame[lobby].statusGame.Obstaculos.splice(0, 1);
             if (obstaculos.length == 0) {
                 //TODO: criar obstaculos
                 //'[{"x":0,"y":0,"tipo":1},{"x":0,"y":10,"tipo":1}]'
@@ -491,6 +500,7 @@ async function PingPongClientTeste(data, SocketClients) {
 
             if (!alive) {
                 player.Alive = false;
+                await SendMessageToPlayer("Você morreu!", SocketClients.NewPlayer[idClient].connection);
                 /* TODO: Se o jogador bater em algum obstaculo fazer algo */
             }
 
