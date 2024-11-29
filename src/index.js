@@ -98,7 +98,8 @@ io.on('connection', function (socket) {
 
     socket.on('TestJson', async function (data) {
 
-        await FS.PingPongClientTeste(data, SocketClients);
+        for (let a = 0; a < 20; a++)
+            await FS.PingPongClientTeste(data, SocketClients);
         /*.split("\",").forEach(async element => {
             var s = await FS.PingPongClientTeste(element.replace("[\"").replace(/\"/g, ''), SocketClients);
             await new Promise(resolve => setTimeout(resolve, 1000));
