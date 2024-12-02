@@ -31,10 +31,10 @@ io.on('connection', function (socket) {
     socket.on('NewPlayer', async function (data) {
         data = JSON.parse(data.text);
         var s = [];
-        data.Username = data.Username.replace(/ /g, '');
+        data.Username = data.Username.replace(/ /g, '').toLowerCase();
 
         if (await FS.CheckNameAreValid(data.Username, data.Admin, "StartGame"))
-            s = await FS.CheckSocketExisted(data.Username, socket, SocketClients);
+            s = await FS.CheckSocketExisted(data.Username, data.token, data.Admin, socket, SocketClients);
         else {
             await FS.SendMessageToPlayer("Nome de jogador inválido", socket);
             socket.intentionalDisconnect = "false";
