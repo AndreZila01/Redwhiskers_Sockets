@@ -69,8 +69,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('CreateLobby', async function (data) {
-        data = JSON.parse(data.text);
-        await FS.CreateLobby(data.Username, SocketClients);
+        await FS.CreateLobby(JSON.parse(data.text), SocketClients);
     });
 
     socket.on('ListLobbys', async function (data) {

@@ -154,27 +154,39 @@ async function AddPlayer(player, SocketClients) {
 }
 
 //Cria um lobby
-async function CreateLobby(Username, SocketClients) {
-    var idHoster = await GetIdPlayer(Username, SocketClients);
+async function CreateLobby(data, SocketClients) {
+    var idHoster = await GetIdPlayer(data.Username, SocketClients);
     var idLobby = await NewIdLobby(SocketClients);
     console.log(idHoster + " " + idLobby);
 
-    if (!await CheckIfUserAreHoster(idHoster, SocketClients)) {
-        //TODO: , codeId: meter essa variavel para verificar se o lobby é multiplayer ou não
-        SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: { EstadoJogador: [], JogadorReady: [], Obstaculos: [] } });
+    if (data.Type == "Singleplayer") {
+        SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: { EstadoJogador: [], JogadorReady: [{ idHoster }], Obstaculos: [] } });
 
-        var request = -1;
-        try {
-            request = await axios.post(`http://localhost:666/check-token`, { idLobby: idLobby, LobbyCreated: new Date, players: SocketClients.NewPlayer[idHoster].id, active: false }, { headers: { 'Content-Type': 'application/json', token: token } });
-        }
-        catch (Ex) {
-            console.log(Ex);
-        }
+        let json = ""
+        SocketClients.NewGame[idLobby].players.forEach(element => {
+            json += `{\"idPlayer\":${element}, \"ready\":true, \"x\":0, \"y\":0, \"distancia\":0.0, \"personagem\":\"[]\", \"powerups\":\"[]\", \"Query_Bot\":\"[]\", \"Alive\":true},`;
+        });
+        SocketClients.NewGame[idLobby].statusGame.EstadoJogador = (JSON.parse("[" + json.substring(0, json.length - 1) + "]"));
 
-        await SendMessageToPlayer("Lobby criado com sucesso " + SocketClients.NewPlayer[idHoster].Username, SocketClients.NewPlayer[idHoster].connection);
-    }
-    else
-        await SendMessageToPlayer("Já está em algum lobby", SocketClients.NewPlayer[idHoster].connection);
+        await SendMessageToPlayersOnLobby(lobby, "Todos os jogadores estão ready! O jogo vai começar!", SocketClients);
+
+    } else
+        if (!await CheckIfUserAreHoster(idHoster, SocketClients) && !await CheckIfUserAreOnLobby(data.Username, SocketClients)) {
+            //TODO: , codeId: meter essa variavel para verificar se o lobby é multiplayer ou não
+            SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: { EstadoJogador: [], JogadorReady: [], Obstaculos: [] } });
+
+            var request = -1;
+            try {
+                request = await axios.post(`http://localhost:666/check-token`, { idLobby: idLobby, LobbyCreated: new Date, players: SocketClients.NewPlayer[idHoster].id, active: false }, { headers: { 'Content-Type': 'application/json', token: token } });
+            }
+            catch (Ex) {
+                console.log(Ex);
+            }
+
+            await SendMessageToPlayer("Lobby criado com sucesso " + SocketClients.NewPlayer[idHoster].Username, SocketClients.NewPlayer[idHoster].connection);
+        }
+        else
+            await SendMessageToPlayer("Já está em algum lobby", SocketClients.NewPlayer[idHoster].connection);
 }
 
 /* Verifica se o Socket já está ligado! */
