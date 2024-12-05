@@ -1,7 +1,5 @@
 //#region Funcções com returns "basicos"
 
-const { mongo } = require("mongoose");
-const { Socket } = require("socket.io");
 const axios = require("axios");
 
 /* Funções que retornam dados */
@@ -156,7 +154,7 @@ async function AddPlayer(player, SocketClients) {
 //Cria um lobby
 async function CreateLobby(data, SocketClients) {
     var idHoster = await GetIdPlayer(data.Username, SocketClients);
-    var idLobby = await NewIdLobby(SocketClients);
+    var idLobby = await NewIdLobby(SocketClients);//TODO:: checkar se o idLobby já existe na api!
     console.log(idHoster + " " + idLobby);
 
     if (data.Type == "Singleplayer") {
@@ -168,11 +166,10 @@ async function CreateLobby(data, SocketClients) {
         });
         SocketClients.NewGame[idLobby].statusGame.EstadoJogador = (JSON.parse("[" + json.substring(0, json.length - 1) + "]"));
 
-        await SendMessageToPlayersOnLobby(lobby, "Todos os jogadores estão ready! O jogo vai começar!", SocketClients);
+        await SendMessageToPlayer("Todos os jogadores estão ready! O jogo vai começar!", SocketClients); //TODO: Alterar está mensagem para o cliente e servidor, caso seja singleplayer
 
     } else
         if (!await CheckIfUserAreHoster(idHoster, SocketClients) && !await CheckIfUserAreOnLobby(data.Username, SocketClients)) {
-            //TODO: , codeId: meter essa variavel para verificar se o lobby é multiplayer ou não
             SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: { EstadoJogador: [], JogadorReady: [], Obstaculos: [] } });
 
             var request = -1;
@@ -202,7 +199,7 @@ async function CheckSocketExisted(Username, token, admin, socket, SocketClients)
         }
 
 
-        if (request.status == 200 || request.sucess == true) //TODO: Check se o codigo funciona
+        if (request.status == 200)
             if (request.data.UserId != -1 && request.data.Mensagem == "Token válido!")
                 if (await CheckNameAreValid(Username, admin, "StartGame"))
                     return [{ id: request.data.UserId, Username: Username, score: 0, active: false, connection: socket, BotMoves: [] }];
