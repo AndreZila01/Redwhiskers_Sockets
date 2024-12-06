@@ -346,7 +346,7 @@ async function PingPongClient(data, SocketClients) {
                 }
 
                 // A cada 1 segundo o bot vai mover-se uma casa
-                if (await CheckNameAreValid(SocketClients.NewPlayer[idClient].Username, true, "OnGame")) {
+                if (await CheckNameAreValid(SocketClients.NewPlayer[idClient].Username, false, "OnGame")) {
                     let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
                     data.move = SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot[0];
                     SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot.splice(0, 1);
