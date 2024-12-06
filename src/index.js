@@ -6,7 +6,7 @@ let IASocket;
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 Port = parseInt(process.env.Port);
-console.log(Port);
+console.log(`${process.env.Ipv4}:${Port}`);
 
 const io = new Server(Port, {
     cors: {
@@ -23,7 +23,7 @@ TODO: receber do bot uma query das posições futuras da ia.
 
 let SocketClients = JSON.parse("{\"NewGame\": [], \"NewPlayer\":[]}");
 io.on('connection', function (socket) {
-    console.log('a user connected');
+    console.log('Bem vindo novo utilizador!');
 
     if (socket.IaSocket != "IASuuperMegaFixeUasah")
         IASocket = socket;

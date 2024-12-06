@@ -46,6 +46,7 @@ function encrypt(text) {
 async function load() {
     username = "andre1";
     token = "123";
+    console.log("Irá ligar-se ao servidor: "+process.env.Ipv4+":"+process.env.Port);
     // socket.emit('NewPlayer', { text: '{"Username":"Test1"}' });
     // socket.emit('news', { text: 'Hello from the client!' });
     // await Promise.resolve(setTimeout(() => { }, 1000));

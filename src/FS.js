@@ -42,8 +42,16 @@ async function FindSocket(socket, Username, SocketClients) {
 }
 
 //Cria um id do lobby
-async function NewIdLobby(SocketClients) {
-    return SocketClients.NewGame.length != 0 ? SocketClients.NewGame[SocketClients.NewGame.length - 1].idGame + 1 : 0;
+async function NewIdLobby(tokenHoster, idHoster, typeLobby) {
+    // return SocketClients.NewGame.length != 0 ? SocketClients.NewGame[SocketClients.NewGame.length - 1].idGame + 1 : 0;
+
+    try {
+        request = await axios.post(`http://localhost:666/registLobby`, { LobbyCreated: new Date, token: tokenHoster, active: false, idHoster: idHoster, typeLobby: typeLobby}, { headers: { 'Content-Type': 'application/json'} });
+    }
+    catch (Ex) {
+        console.log(Ex);
+    }
+
 }
 
 //Retorna dados do lobby
@@ -154,7 +162,8 @@ async function AddPlayer(player, SocketClients) {
 //Cria um lobby
 async function CreateLobby(data, SocketClients) {
     var idHoster = await GetIdPlayer(data.Username, SocketClients);
-    var idLobby = await NewIdLobby(SocketClients);//TODO:: checkar se o idLobby já existe na api!
+    var idLobby = await NewIdLobby(data.token, idHoster, data.Type);
+    
     console.log(idHoster + " " + idLobby);
 
     if (data.Type == "Singleplayer") {
@@ -173,13 +182,7 @@ async function CreateLobby(data, SocketClients) {
             SocketClients.NewGame.push({ idGame: idLobby, dateTime: new Date, players: [SocketClients.NewPlayer[idHoster].id], active: false, statusGame: { EstadoJogador: [], JogadorReady: [], Obstaculos: [] } });
 
             var request = -1;
-            try {
-                request = await axios.post(`http://localhost:666/check-token`, { idLobby: idLobby, LobbyCreated: new Date, players: SocketClients.NewPlayer[idHoster].id, active: false }, { headers: { 'Content-Type': 'application/json', token: token } });
-            }
-            catch (Ex) {
-                console.log(Ex);
-            }
-
+            
             await SendMessageToPlayer("Lobby criado com sucesso " + SocketClients.NewPlayer[idHoster].Username, SocketClients.NewPlayer[idHoster].connection);
         }
         else
@@ -492,7 +495,7 @@ async function PingPongClientTeste(data, SocketClients) {
                 }
 
                 // A cada 1 segundo o bot vai mover-se uma casa
-                if (await CheckNameAreValid(SocketClients.NewPlayer[idClient].Username, true, "OnGame")) {
+                if (await CheckNameAreValid(SocketClients.NewPlayer[idClient].Username, false, "OnGame")) {
                     let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
                     data.move = SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot[0];
                     SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot.splice(0, 1);
