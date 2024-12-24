@@ -47,6 +47,8 @@ async function NewIdLobby(tokenHoster, idHoster, typeLobby) {
 
     try {
         request = await axios.post(`http://localhost:666/registLobby`, { LobbyCreated: new Date, token: tokenHoster, active: false, idHoster: idHoster, typeLobby: typeLobby}, { headers: { 'Content-Type': 'application/json'} });
+        console.log(request.data);
+        return request.data.idLobby;
     }
     catch (Ex) {
         console.log(Ex);
