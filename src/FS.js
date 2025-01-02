@@ -15,7 +15,7 @@ async function CheckLobbyExisted(idLobby, SocketClients) {
 
 //Retorna se o player está em algum lobby
 async function CheckIfUserAreOnLobby(Username, SocketClients) {
-    var userid = await GetIdPlayer(Username, SocketClients);
+    var userid = SocketClients.NewPlayer[await GetIdPlayer(Username, SocketClients)].id;
 
     await SocketClients.NewGame.forEach(element => {
         if (element.players.includes(userid))
@@ -52,7 +52,7 @@ async function CreateNewLobby(tokenHoster, idHoster, typeLobby) {
             return -1;
     }
     catch (Ex) {
-        console.log(Ex);
+        console.log(Ex.response.data.Mensagem);
     }
 }
 
@@ -157,6 +157,7 @@ async function checkColider(obstaculos, player, EstadoJogador) {
 
 //Adicona o jogador a lista
 async function AddPlayer(player, SocketClients) {
+    player.connection.Name = player.Username;
     SocketClients.NewPlayer.push(player);
     await SendMessageToPlayer("Bem vindo " + player.Username, player.connection);
 }
@@ -167,7 +168,8 @@ async function CreateLobby(data, SocketClients) {
     var index = await GetIdPlayer(data.Username, SocketClients);
     var newLobby = await CreateNewLobby(data.token, SocketClients.NewPlayer[index].id, data.typeLobby)
 
-    if (newLobby != -1) {
+    if (newLobby != -1 && newLobby != undefined) {
+        console.log(newLobby);
         console.log(index + " " + newLobby.GameLobbyid);
 
         if (data.typeLobby  == "Singleplayer") {
@@ -237,7 +239,8 @@ async function JoinLobby(Username, idLobby, SocketClients) {
     }
     else {
         await SendMessageToPlayer("Erro ao entrar no lobby", socket);
-        SocketClients.NewPlayer[idPlayer].connection.intentionalDisconnect = "true";
+        SocketClients.NewPlayer[idPlayer].c3
+        onnection.intentionalDisconnect = "true";
         SocketClients.NewPlayer[idPlayer].connection.disconnect();
     }
 

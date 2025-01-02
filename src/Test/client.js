@@ -10,19 +10,18 @@ socket.on('news', function (data) {
     console.log('Received news from server:', data);
 });
 
-var username;
 socket.on('status', async function (data) {
-    console.log('Received news from server1:', data);
+    var asss = require('./client.js');
+    if (username == undefined)
+        username = socket.username;
+    console.log('Name:', this.username);
 
     if (data.content == "Todos os jogadores estão ready! O jogo vai começar!") {
         let a = 0;
         while (true) {
-            if (username == undefined)
-                username = socket.username;
-
-            socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"x\":0, \"y\":0, \"move\":\"up\"}` });
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            console.log("Ping" + a);
+            socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"token\":\"${token}\" \"x\":0, \"y\":0, \"move\":\"up\"}` });
+            await new Promise(resolve => setTimeout(resolve, 1000));//TODO: 500ms
+            console.log("Ping " + a);
         }
     }
     else if (data.content.includes("Kick") || data.content.includes("Ban"))
@@ -45,6 +44,7 @@ function encrypt(text) {
 
 async function load() {
     username = "andre1";
+    socket.username = username;
     token = "123";
     console.log("Irá ligar-se ao servidor: " + process.env.Ipv4 + ":" + process.env.Port);
     // socket.emit('NewPlayer', { text: '{"Username":"Test1"}' });
@@ -59,6 +59,7 @@ async function load() {
         switch (option.split(" ")[0]) {
             case "-1":
                 var username = prompt("Digite o username:");
+                socket.username = username;
                 break;
             case "0":
                 var email = prompt("Digite o seu email: ").replace("\n", "").replace("\r", "").replace("\r\n", "").replace(/ /g, '');

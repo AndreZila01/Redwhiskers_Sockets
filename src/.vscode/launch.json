@@ -11,9 +11,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\index.js"
-            // "console": "integratedTerminal",
+            // "program": "${workspaceFolder}\\index.js"
+            "console": "integratedTerminal",
             // "program": "${workspaceFolder}\\Test\\singlePlayer.js"
+            "program": "${workspaceFolder}\\Test\\client.js"
         },
         {
             "name": "Docker Node.js Launch",
