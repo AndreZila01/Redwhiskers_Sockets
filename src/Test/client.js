@@ -46,14 +46,14 @@ function encrypt(text) {
 async function load() {
     username = "andre1";
     token = "123";
-    console.log("Irá ligar-se ao servidor: "+process.env.Ipv4+":"+process.env.Port);
+    console.log("Irá ligar-se ao servidor: " + process.env.Ipv4 + ":" + process.env.Port);
     // socket.emit('NewPlayer', { text: '{"Username":"Test1"}' });
     // socket.emit('news', { text: 'Hello from the client!' });
     // await Promise.resolve(setTimeout(() => { }, 1000));
     // socket.emit('CreateLobby', { text: '{"Username":"Test1"}' });
 
     while (true) {
-        console.log(`\n\n-1-Definir um username(atual: ${username}) \n0 - Login\n1-Ligar-se ao servidor\n2-Criar lobby\n3-Lista Lobbys\n4-Ligar-se ao Lobby\n5-Dizer que está ready ou unready\n6- Teste Python\n`);
+        console.log(`\n\n-1-Definir um username(atual: ${username}) \n0 - Criar conta!\n1 - Login\n2-Criar lobby\n3-Lista Lobbys\n4-Ligar-se ao Lobby\n5-Dizer que está ready ou unready\n7- Teste Python\n`);
 
         var option = prompt("Digite o que deseja fazer:");
         switch (option.split(" ")[0]) {
@@ -61,17 +61,34 @@ async function load() {
                 var username = prompt("Digite o username:");
                 break;
             case "0":
-                var password = encrypt(prompt("Digite a senha:").replace("\n", "").replace("\r", "").replace("\r\n", "").replace(/ /g, ''));
-                var request = await axios.post(`http://${process.env.Ipv4}:666/login`, { username: username, password: password }, { headers: { 'Content-Type': 'application/json' } });
-                var token = request.headers.authorization;
+                var email = prompt("Digite o seu email: ").replace("\n", "").replace("\r", "").replace("\r\n", "").replace(/ /g, '');
+                var password = encrypt(prompt("Digite a senha: ").replace("\n", "").replace("\r", "").replace("\r\n", "").replace(/ /g, ''));
+                var request = await axios.post(`http://${process.env.IPV4Test}:666/register`, { username: username, email: email, password: password }, { headers: { 'Content-Type': 'application/json' } });
+                if (request.status == 200)
+                    console.log("Conta criada com sucesso!");
+                else
+                    console.log("Erro ao criar conta!");
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                //token = request.headers.authorization;
+
+                //Validar token para ter o id do user
                 break;
             case "1":
-                socket.username = username;
-                socket.emit('NewPlayer', { text: `{"Username":"${username}", "token":"${token}"}` });
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                try {
+                    var password = encrypt(prompt("Digite a senha: ").replace("\n", "").replace("\r", "").replace("\r\n", "").replace(/ /g, ''));
+                    var request = await axios.post(`http://${process.env.IPV4Test}:666/login`, { username: username, password: password }, { headers: { 'Content-Type': 'application/json' } });
+                    console.log(request.statusText);
+                    token = request.headers.authorization;
+                    socket.emit('NewPlayer', { text: `{"Username":"${username}", "token":"${token}"}` });
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                catch (ex) {
+                    console.log(ex.message);
+                }
                 break;
             case "2":
-                socket.emit('CreateLobby', { text: `{"Username":"${username}"}` });
+                socket.emit('CreateLobby', { text: `{"Username":"${username}", "token":"${token}", "typeLobby":"Multiplayer"}` });
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 break;
             case "3":
