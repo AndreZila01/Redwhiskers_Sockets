@@ -51,8 +51,11 @@ io.on('connection', function (socket) {
     });
 
     socket.on('Ping', async function (data) {
-        console.log(data);
-        await FS.PingPongClient(JSON.parse(data.text), SocketClients);
+        if (SocketClients.NewGame.length != 0 || SocketClients.NewPlayer.length != 0)
+            await FS.PingPongClient(data.text, SocketClients);
+        else{
+            socket.disconnect();
+        }
     });
 
     socket.on('news', async function (data) {
@@ -97,8 +100,8 @@ io.on('connection', function (socket) {
 
     socket.on('TestJson', async function (data) {
 
-        for (let a = 0; a < 20; a++)
-            await FS.PingPongClientTeste(data, SocketClients);
+        // for (let a = 0; a < 20; a++)
+        //     await FS.PingPongClientTeste(data, SocketClients);
         /*.split("\",").forEach(async element => {
             var s = await FS.PingPongClientTeste(element.replace("[\"").replace(/\"/g, ''), SocketClients);
             await new Promise(resolve => setTimeout(resolve, 1000));

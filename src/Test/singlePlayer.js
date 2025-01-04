@@ -16,18 +16,19 @@ socket.on('status', async function (data) {
 
     if (data.content == "Todos os jogadores estão ready! O jogo vai começar!" || data.content == "O jogo vai começar! Estás preparado!") {
         let a = 0;
+
         while (true) {
             if (username == undefined)
                 username = socket.username;
 
             let random = (Math.floor(Math.random() * 5000) / 1000);
-            if (random == 0)
+            if (random > 0 && random < 0.99)
                 socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"x\":0, \"y\":0, \"move\":\"wait\"}` });
-            else if (random == 1)
+            else if (random > 0.98 && random < 1.99)
                 socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"x\":0, \"y\":0, \"move\":\"up\"}` });
-            else if (random == 2)
+            else if (random > 1.98 && random < 2.99) 
                 socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"x\":0, \"y\":0, \"move\":\"right\"}` });
-            else if (random == 3)
+            else if (random > 2.98 && random < 3.99)
                 socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"x\":0, \"y\":0, \"move\":\"down\"}` });
             else
                 socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"x\":0, \"y\":0, \"move\":\"left\"}` });

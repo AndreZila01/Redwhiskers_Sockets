@@ -12,20 +12,40 @@ socket.on('news', function (data) {
 
 socket.on('status', async function (data) {
     var asss = require('./client.js');
-    if (username == undefined)
-        username = socket.username;
-    console.log('Name:', this.username);
+    console.log('Received news from server1:', data);
 
     if (data.content == "Todos os jogadores estão ready! O jogo vai começar!") {
         let a = 0;
         while (true) {
-            socket.emit('Ping', { text: `{\"Username\":\"${username}\", \"token\":\"${token}\" \"x\":0, \"y\":0, \"move\":\"up\"}` });
+            let random = Math.floor(Math.random() * 8000) / 1000;
+            if (random > 0.01 && random < 0.99) 
+                random = "up";
+            else if (random > 0.98 && random < 1.99) 
+                random = "down";
+            else if (random > 1.98 && random < 2.99) 
+                random = "left";
+            else if (random > 2.98 && random < 3.99)
+                random = "right";
+            else if (random > 3.98 && random < 4.99)
+                random = "left";
+            else if (random > 4.98 && random < 5.99)
+                random = "right";
+            else if (random > 5.98 && random < 6.99)
+                random = "left";
+            else
+                random = "wait";
+
+            socket.emit('Ping', { text: { Username: socket.username, token: token, x: 0, y: 0, move: random } });
             await new Promise(resolve => setTimeout(resolve, 1000));//TODO: 500ms
             console.log("Ping " + a);
         }
     }
     else if (data.content.includes("Kick") || data.content.includes("Ban"))
         process.exit();
+    else if (data.content.includes("Game Over")) {
+        console.log("Game Over");
+        process.exit();
+    }
 
 });
 
