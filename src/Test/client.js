@@ -1,7 +1,7 @@
 const { default: axios } = require('axios');
 var io = require('socket.io-client');
 const prompt = require("prompt-sync")({ sigint: true });
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 var socket = io.connect(`http://${process.env.Ipv4}:${process.env.Port}`);
 const crypto = require('crypto');
 
@@ -16,13 +16,15 @@ socket.on('status', async function (data) {
 
     if (data.content == "Todos os jogadores estão ready! O jogo vai começar!") {
         let a = 0;
-        while (true) {
+        //while (true) 
+        setInterval(() => {
+
             let random = Math.floor(Math.random() * 8000) / 1000;
-            if (random > 0.01 && random < 0.99) 
+            if (random > 0.01 && random < 0.99)
                 random = "up";
-            else if (random > 0.98 && random < 1.99) 
+            else if (random > 0.98 && random < 1.99)
                 random = "down";
-            else if (random > 1.98 && random < 2.99) 
+            else if (random > 1.98 && random < 2.99)
                 random = "left";
             else if (random > 2.98 && random < 3.99)
                 random = "right";
@@ -35,10 +37,13 @@ socket.on('status', async function (data) {
             else
                 random = "wait";
 
+            // socket.emit('Ping', { text: { Username: socket.username, token: token, x: 0, y: 0, move: random } });
+            // await new Promise(resolve => setTimeout(resolve, 1000));//TODO: 500ms
+
             socket.emit('Ping', { text: { Username: socket.username, token: token, x: 0, y: 0, move: random } });
-            await new Promise(resolve => setTimeout(resolve, 1000));//TODO: 500ms
             console.log("Ping " + a);
-        }
+        }, 1000 / 4);
+
     }
     else if (data.content.includes("Kick") || data.content.includes("Ban"))
         process.exit();

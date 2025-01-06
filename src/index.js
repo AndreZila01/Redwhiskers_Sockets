@@ -1,7 +1,7 @@
 const FS = require('./FS.js');
 const { Server } = require('socket.io');
 let Port;
-let IASocket;
+let IASocket = undefined;
 
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
@@ -25,8 +25,13 @@ let SocketClients = JSON.parse("{\"NewGame\": [], \"NewPlayer\":[]}");
 io.on('connection', function (socket) {
     console.log('Bem vindo novo utilizador!');
 
-    if (socket.IaSocket != "IASuuperMegaFixeUasah")
-        IASocket = socket;
+    socket.on('IaApiConnection', async function (data) {
+        if (data.IaSocket == "123456789987654321" && IASocket == undefined) {
+            IASocket = socket;
+            socket.emit('JsonMoves', "Coneção estabelecida com sucesso");   
+        }
+    });
+
 
     socket.on('NewPlayer', async function (data) {
         data = JSON.parse(data.text);
@@ -34,7 +39,7 @@ io.on('connection', function (socket) {
         data.Username = data.Username.replace(/ /g, '').toLowerCase();
 
         if (await FS.CheckNameAreValid(data.Username, data.Admin, "StartGame"))
-            s = await FS.CheckSocketExisted(data.Username, data.token, data.Admin, socket, SocketClients);
+            s = await FS.CheckSocketExisted(data.Username, data.token, false, socket, SocketClients);
         else {
             await FS.SendMessageToPlayer("Nome de jogador inválido", socket);
             socket.intentionalDisconnect = "false";
@@ -50,10 +55,22 @@ io.on('connection', function (socket) {
         }
     });
 
+    socket.on('NewBot', async function (data) {
+        data = JSON.parse(data.text);
+        data.Bot = data.Bot.replace(/ /g, '').toLowerCase();
+
+        var result = FS.AddBot(data, SocketClients);
+        FS.AddPlayer({ id: result.botid, Username: result.Botname, score: 0, GameWasStarted: false, connection: IASocket, BotMoves: [] }, SocketClients );
+    });
+
+    socket.on('JsonMoves', async function (data){
+        // Vou receber moves a partir daqui! Ricardo
+    })
+
     socket.on('Ping', async function (data) {
         if (SocketClients.NewGame.length != 0 || SocketClients.NewPlayer.length != 0)
             await FS.PingPongClient(data.text, SocketClients);
-        else{
+        else {
             socket.disconnect();
         }
     });
@@ -98,6 +115,9 @@ io.on('connection', function (socket) {
         console.log("TestObject");
     });
 
+    socket.on('test', async function (data) {
+        console.log(""+ new Date());
+    });
     socket.on('TestJson', async function (data) {
 
         // for (let a = 0; a < 20; a++)
@@ -113,4 +133,4 @@ io.on('connection', function (socket) {
         });*/
 
     });
-});
+})

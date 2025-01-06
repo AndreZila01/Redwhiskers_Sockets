@@ -91,20 +91,20 @@ async function CriarObstaculos() {
         // 70 x 100
         let x = parseInt((Math.random() * 690000000) / 6900000);
         let y = parseInt((Math.random() * 990000000) / 9900000);
-        let tipo = parseInt((Math.random() * 300) / 100);
+        let tipo = 1;//parseInt((Math.random() * 300) / 100);
 
         let index;
         obstaculos.forEach(element => {
 
-            if (tipo == 0)
-                tipo = 1;
+            // if (tipo == 0)
+            //     tipo = 1;
 
             if (tipo == 1)
-                index = (Math.abs(element.x - x) > 5 && Math.abs(element.y - y) < 5);//obstaculo 1x1
+                index = (Math.abs(element.x - x) > 2 && Math.abs(element.y - y) < 2);//obstaculo 1x1
             else if (tipo == 2)
-                index = (Math.abs(element.x - x) > 5 && Math.abs(element.y - y) > 10);//obstaculo 1x2
+                index = (Math.abs(element.x - x) > 2 && Math.abs(element.y - y) > 5);//obstaculo 1x2
             else if (tipo == 3)
-                index = (Math.abs(element.x - x) > 10 && Math.abs(element.y - y) > 5);//obstaculo 2x1
+                index = (Math.abs(element.x - x) > 5 && Math.abs(element.y - y) > 2);//obstaculo 2x1
             else
                 index = false;
 
@@ -172,6 +172,20 @@ async function AddPlayer(player, SocketClients) {
     player.connection.Name = player.Username;
     SocketClients.NewPlayer.push(player);
     await SendMessageToPlayer("Bem vindo " + player.Username, player.connection);
+}
+
+async function AddBot(bot, SocketClients) {
+    try {
+        request = await axios.post(`http://192.168.1.64:666/registerbot`, { Botname: bot.botname, type: bot.type }, { headers: { 'Content-Type': 'application/json' } });
+        if (request.status == 200)
+            return request.data;
+        else
+            return -1;
+    }
+    catch (Ex) {
+        console.log(Ex.response.data.Mensagem);
+    }
+    //TODO: fazer request a api para adicionar um bot
 }
 
 //Cria um lobby
@@ -610,6 +624,7 @@ module.exports = {
     FindSocket,
     ReturnListOfLobbys,
     AddPlayer,
+    AddBot,
     RemovePlayer,
     RemoveLobby,
     DisconnectAllUsers,
