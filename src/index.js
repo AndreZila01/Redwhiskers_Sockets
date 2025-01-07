@@ -1,7 +1,6 @@
 const FS = require('./FS.js');
 const { Server } = require('socket.io');
 let Port;
-let IASocket = undefined;
 
 const path = require('path');
 const e = require('cors');
@@ -23,9 +22,9 @@ TODO: receber do bot uma query das posições futuras da ia.
 */
 
 let SocketClients = JSON.parse("{\"NewGame\": [], \"NewPlayer\":[]}");
+let IASocket = undefined;
 io.on('connection', function (socket) {
     console.log('Bem vindo novo utilizador!');
-    IASocket = undefined;
 
     socket.on('IaApiConnection', async function (data) {
         if (data.IaSocket == "123456789987654321" && IASocket == undefined) {
@@ -63,11 +62,13 @@ io.on('connection', function (socket) {
         data.botname = data.Bot.replace(/ /g, '');
 
         var result = await FS.AddBot(data, SocketClients);
-        if (result != "read ECONNRESET" || result != -1) {
-            await FS.AddPlayer({ id: result.botid, Username: result.botname, score: 0, GameWasStarted: false, connection: IASocket, BotMoves: [] }, SocketClients);
+        if (result != "read ECONNRESET" && result != -1) {
+            await FS.AddPlayer({ id: result.botid, Username: result.botname, score: 0, GameWasStarted: false, connection: IASocket, BotMoves: [], typeBot: data.type, token: result.token }, SocketClients );
 
             //** **/
-            await FS.OkReadyLobby({ Username: result.botname, idLobby: data.idLobby }, SocketClients, socket, undefined); // IaApiConnection == undefined ? socket : IaApiConnection
+            await FS.JoinLobby(result.botname, data.idLobby, SocketClients);
+
+            await FS.OkReadyLobby({ Username: result.botname, idLobby: data.idLobby }, SocketClients, socket, IASocket); // IASocket == undefined ? socket : IASocket
         }
         else {
             await FS.SendMessageToPlayer("Problemas a criar o bot tente novamente!", socket);
@@ -115,7 +116,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('OkReadyLobby', async function (data) {
-        await FS.OkReadyLobby(JSON.parse(data.text), SocketClients, socket, undefined);//IaApiConnection
+        await FS.OkReadyLobby(JSON.parse(data.text), SocketClients, socket, IASocket);//IASocket
     });
 
 

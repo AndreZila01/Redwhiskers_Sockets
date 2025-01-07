@@ -183,7 +183,7 @@ async function AddPlayer(player, SocketClients) {
 
 async function AddBot(bot, SocketClients) {
     try {
-        request = await axios.post(`http://${Ipv4}:666/registerbot`, { Botname: bot.botname, type: bot.type });
+        request = await axios.post(`http://${Ipv4}:666/registerbot`, { Botname: bot.botname, type: bot.type }, { headers: { 'Content-Type': 'application/json' } });
         if (request.status == 200)
             return request.data;
         else
@@ -486,11 +486,13 @@ async function OkReadyLobby(data, SocketClients, socketclient, IaApiConnection) 
             var indexuser = await GetIndexPlayer(data.Username, SocketClients);
             var idUser = SocketClients.NewPlayer[indexuser].id;
             if (!lobby.statusGame.JogadorReady.includes(idUser)) {
-                if (lobby.players.length == 1) {
+                if (lobby.statusGame.JogadorReady == 0) {
+                    lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
                     if (SocketClients.NewPlayer[indexuser].connection != undefined)
                         await SendMessageToPlayer("Para o jogo começar tem de ter pelo menos 1 jogador!", SocketClients.NewPlayer[indexuser].connection);
                 }
                 else {
+
                     lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
 
                     await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient);//TODO: Checkar porque ele não envia a mensagem para o ultimo utilizador ...
@@ -508,8 +510,12 @@ async function OkReadyLobby(data, SocketClients, socketclient, IaApiConnection) 
                         await SendMessageToPlayersOnLobby(lobby, "Todos os jogadores estão ready! O jogo vai começar!", SocketClients);
 
                         for (let i = 0; i < SocketClients.NewGame[idLobby].players.length; i++)
-                            if (SocketClients.NewPlayer[SocketClients.NewGame[idLobby].players[i]].Username.includes("Bot"))
-                                await SendMessageToPlayer({ idBot: SocketClients.NewGame[idLobby].players[i], typeBot: SocketClients.NewPlayer[SocketClients.NewGame[idLobby].players[i]].TypeBot, token: SocketClients.NewPlayer[SocketClients.NewGame[idLobby].players[i]].token, obstaculos: SocketClients.NewGame[idLobby].statusGame.Obstaculos }, IaApiConnection);
+
+                            var idUser = SocketClients.NewGame[idLobby].players[i];
+                        var user = SocketClients.NewPlayer[SocketClients.NewPlayer.findIndex(ws => ws.id == idUser)];
+
+                        if (user.Username.includes("Bot"))
+                            await SendMessageToPlayer({ idBot: idUser, typeBot: user.typeBot, token: user.token, obstaculos: SocketClients.NewGame[idLobby].statusGame.Obstaculos, x: 10, y:0 }, IaApiConnection);
                     }
                 }
             }
