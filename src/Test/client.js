@@ -1,6 +1,8 @@
 const { default: axios } = require('axios');
 var io = require('socket.io-client');
 const prompt = require("prompt-sync")({ sigint: true });
+
+const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 var socket = io.connect(`http://${process.env.Ipv4}:${process.env.Port}`);
 const crypto = require('crypto');
@@ -78,7 +80,7 @@ async function load() {
     // socket.emit('CreateLobby', { text: '{"Username":"Test1"}' });
 
     while (true) {
-        console.log(`\n\n-1-Definir um username(atual: ${username}) \n0 - Criar conta!\n1 - Login\n2-Criar lobby\n3-Lista Lobbys\n4-Ligar-se ao Lobby\n5-Dizer que está ready ou unready\n7- Teste Python\n`);
+        console.log(`\n\n-1-Definir um username(atual: ${username}) \n0 - Criar conta!\n1 - Login\n2-Criar lobby\n3-Lista Lobbys\n4-Ligar-se ao Lobby\n5-Dizer que está ready ou unready\n6- Teste Python\n7- Adicionar Bots`);
 
         var option = prompt("Digite o que deseja fazer:");
         switch (option.split(" ")[0]) {
@@ -138,6 +140,10 @@ async function load() {
                 socket.emit('TestJson', { coordinates: `["up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left"]` });
                 console.log("TestJson");
                 break;
+            case "7":
+                socket.emit('NewBot', { text: `{"Bot":"Bot1", "type": 1, "idLobby":0}` });
+                break;
+
         }
     }
 }

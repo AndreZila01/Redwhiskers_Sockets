@@ -4,9 +4,10 @@ let Port;
 let IASocket = undefined;
 
 const path = require('path');
+const e = require('cors');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 Port = parseInt(process.env.Port);
-console.log(`${process.env.Ipv4}:${Port}`);
+console.log(`localhost:${Port}`);
 
 const io = new Server(Port, {
     cors: {
@@ -24,11 +25,13 @@ TODO: receber do bot uma query das posições futuras da ia.
 let SocketClients = JSON.parse("{\"NewGame\": [], \"NewPlayer\":[]}");
 io.on('connection', function (socket) {
     console.log('Bem vindo novo utilizador!');
+    IASocket = undefined;
 
     socket.on('IaApiConnection', async function (data) {
         if (data.IaSocket == "123456789987654321" && IASocket == undefined) {
             IASocket = socket;
-            socket.emit('JsonMoves', "Coneção estabelecida com sucesso");   
+            console.log("Coneção estabelecida com sucesso com a IA");
+            socket.emit('JsonMoves', "Coneção estabelecida com sucesso");
         }
     });
 
@@ -57,13 +60,22 @@ io.on('connection', function (socket) {
 
     socket.on('NewBot', async function (data) {
         data = JSON.parse(data.text);
-        data.Bot = data.Bot.replace(/ /g, '').toLowerCase();
+        data.botname = data.Bot.replace(/ /g, '');
 
-        var result = FS.AddBot(data, SocketClients);
-        FS.AddPlayer({ id: result.botid, Username: result.Botname, score: 0, GameWasStarted: false, connection: IASocket, BotMoves: [] }, SocketClients );
+        var result = await FS.AddBot(data, SocketClients);
+        if (result != "read ECONNRESET" || result != -1) {
+            await FS.AddPlayer({ id: result.botid, Username: result.botname, score: 0, GameWasStarted: false, connection: IASocket, BotMoves: [] }, SocketClients);
+
+            //** **/
+            await FS.OkReadyLobby({ Username: result.botname, idLobby: data.idLobby }, SocketClients, socket, undefined); // IaApiConnection == undefined ? socket : IaApiConnection
+        }
+        else {
+            await FS.SendMessageToPlayer("Problemas a criar o bot tente novamente!", socket);
+            console.log("Problemas a criar o bot tente novamente!");
+        }
     });
 
-    socket.on('JsonMoves', async function (data){
+    socket.on('JsonMoves', async function (data) {
         // Vou receber moves a partir daqui! Ricardo
     })
 
@@ -103,7 +115,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('OkReadyLobby', async function (data) {
-        await FS.OkReadyLobby(JSON.parse(data.text), SocketClients, socket);
+        await FS.OkReadyLobby(JSON.parse(data.text), SocketClients, socket, undefined);//IaApiConnection
     });
 
 
@@ -116,7 +128,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('test', async function (data) {
-        console.log(""+ new Date());
+        console.log("" + new Date());
     });
     socket.on('TestJson', async function (data) {
 
