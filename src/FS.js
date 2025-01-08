@@ -360,7 +360,8 @@ async function SendMessageToPlayersOnLobby(lobby, mensagem, SocketClients) {
         //     //     mensagem = JSON.stringify(json.Obstaculos);
         //     await SendMessageToPlayer(mensagem, player.connection);
         // } else
-        await SendMessageToPlayer(mensagem, player.connection);
+        if (!player.Username.includes("Bot"))
+            await SendMessageToPlayer(mensagem, player.connection);
     });
 }
 6
@@ -443,7 +444,14 @@ async function PingPongClient(data, SocketClients) {
 
                 json = json.substring(0, json.length - 1) + `],\"Obstaculos\":[${JSON.stringify(obstaculos)}]}`;
 
-                await SendMessageToPlayersOnLobby(SocketClients.NewGame[lobby], json, SocketClients);
+
+
+                if (SocketClients.NewPlayer[index].Username.includes("Bot"))
+                    await SendMessageToPlayer({ idBot: idClient, typeBot: SocketClients.NewPlayer[index].typeBot, token: SocketClients.NewPlayer[index].token, obstaculos: SocketClients.NewGame[lobby].statusGame.Obstaculos, x: player.x, y: player.y }, SocketClients.IaApiConnection);
+                else
+                    await SendMessageToPlayersOnLobby(SocketClients.NewGame[lobby], json, SocketClients);
+
+
             }
             else
                 console.log("O jogador não está em nenhum lobby!");
@@ -515,7 +523,7 @@ async function OkReadyLobby(data, SocketClients, socketclient, IaApiConnection) 
                         var user = SocketClients.NewPlayer[SocketClients.NewPlayer.findIndex(ws => ws.id == idUser)];
 
                         if (user.Username.includes("Bot"))
-                            await SendMessageToPlayer({ idBot: idUser, typeBot: user.typeBot, token: user.token, obstaculos: SocketClients.NewGame[idLobby].statusGame.Obstaculos, x: 10, y:0 }, IaApiConnection);
+                            await SendMessageToPlayer({ idBot: idUser, typeBot: user.typeBot, token: user.token, obstaculos: SocketClients.NewGame[idLobby].statusGame.Obstaculos, x: 10, y: 0 }, IaApiConnection);
                     }
                 }
             }
