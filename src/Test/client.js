@@ -5,7 +5,7 @@ const prompt = require("prompt-sync")({ sigint: true });
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 var socket = io.connect(`http://${process.env.Ipv4}:${process.env.Port}`);
-const crypto = require('crypto');
+const CryptoJS = require('crypto-js');
 
 // Listen for the 'news' event from the server
 socket.on('news', function (data) {
@@ -61,10 +61,15 @@ socket.on('bot1', async function (data) {
 });
 
 function encrypt(text) {
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from("93f5e5439e2d4a9c70e51c1a4b78c8a3d2e6a3f4b791c8f12b3e74d9a3f9e2b1", 'hex'), Buffer.from("9a5d4c3f7e8a9c2b3e4f1d6a8b7c9e0f", 'hex'));
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return encrypted;
+    const cryptkey = CryptoJS.enc.Utf8.parse('93f5e5439e2d4a9c70e51c1a4b78c8a3d2e6a3f4b791c8f12b3e74d9a3f9e2b1');
+
+    // Encrypt the plaintext using AES
+    let encrypted = CryptoJS.AES.encrypt(text, '93f5e5439e2d4a9c70e51c1a4b78c8a3d2e6a3f4b791c8f12b3e74d9a3f9e2b1');
+
+    // Convert the encrypted data to a Base64 string
+    let encryptedData = encrypted.toString();
+
+    return encryptedData;
 }
 
 // Send a 'news' event to the server
@@ -91,7 +96,7 @@ async function load() {
             case "0":
                 var email = prompt("Digite o seu email: ").replace("\n", "").replace("\r", "").replace("\r\n", "").replace(/ /g, '');
                 var password = encrypt(prompt("Digite a senha: ").replace("\n", "").replace("\r", "").replace("\r\n", "").replace(/ /g, ''));
-                var request = await axios.post(`http://${process.env.Ipv4}:666/register`, { username: username, email: email, password: password }, { headers: { 'Content-Type': 'application/json' } });
+                var request = await axios.post(`http://${process.env.Ipv4}:3005/register`, { username: username, email: email, password: password }, { headers: { 'Content-Type': 'application/json' } });
                 if (request.status == 200)
                     console.log("Conta criada com sucesso!");
                 else
@@ -105,7 +110,8 @@ async function load() {
             case "1":
                 try {
                     var password = encrypt(prompt("Digite a senha: ").replace("\n", "").replace("\r", "").replace("\r\n", "").replace(/ /g, ''));
-                    var request = await axios.post(`http://${process.env.Ipv4}:666/login`, { username: username, password: password }, { headers: { 'Content-Type': 'application/json' } });
+                    console.log(password);
+                    var request = await axios.post(`http://${process.env.Ipv4}:3005/login`, { username: username, password: password }, { headers: { 'Content-Type': 'application/json' } });
                     console.log(request.statusText);
                     token = request.headers.authorization;
                     socket.emit('NewPlayer', { text: `{"Username":"${username}", "token":"${token}"}` });
