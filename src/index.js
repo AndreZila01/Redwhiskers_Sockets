@@ -30,7 +30,7 @@ io.on('connection', function (socket) {
         if (data.IaSocket == "123456789987654321" && IASocket == undefined) {
             IASocket = socket;
             console.log("Coneção estabelecida com sucesso com a IA");
-            socket.emit('JsonMoves', "Coneção estabelecida com sucesso");
+            //socket.emit('JsonMoves', "Coneção estabelecida com sucesso");
         }
     });
 
@@ -78,6 +78,8 @@ io.on('connection', function (socket) {
 
     socket.on('JsonMoves', async function (data) {
         // Vou receber moves a partir daqui! Ricardo
+		console.log("JsonMoves: " + data);
+		await FS.JsonMoves(data.text, SocketClients);
     })
 
     socket.on('Ping', async function (data) {

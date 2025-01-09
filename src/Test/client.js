@@ -18,7 +18,7 @@ socket.on('status', async function (data) {
 
     if (data.content == "Todos os jogadores estão ready! O jogo vai começar!") {
         let a = 0;
-        //while (true) 
+        //while (true)
         setInterval(() => {
 
             let random = Math.floor(Math.random() * 8000) / 1000;
