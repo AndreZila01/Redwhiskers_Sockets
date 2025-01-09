@@ -51,7 +51,7 @@ async function FindSocket(socket, Username, SocketClients) {
 //Cria um lobby e retorna dados do lobby
 async function CreateNewLobby(tokenHoster, idHoster, typeLobby) {
     try {
-        let request = await axios.post(`http://${Ipv4}:666/registLobby`, { LobbyCreated: new Date, token: tokenHoster, GameWasStarted: (typeLobby == "Singleplayer" ? true : false), idHoster: idHoster, typeLobby: typeLobby }, { headers: { 'Content-Type': 'application/json' } });
+        let request = await axios.post(`http://${Ipv4}:${process.env.API_PORT}/registLobby`, { LobbyCreated: new Date, token: tokenHoster, GameWasStarted: (typeLobby === "Singleplayer" ? true : false), idHoster: idHoster, typeLobby: typeLobby }, { headers: { 'Content-Type': 'application/json' } });
         if (request.status == 200)
             return request.data;
         else
@@ -183,7 +183,7 @@ async function AddPlayer(player, SocketClients) {
 
 async function AddBot(bot, SocketClients) {
     try {
-        request = await axios.post(`http://${Ipv4}:666/registerbot`, { Botname: bot.botname, type: bot.type }, { headers: { 'Content-Type': 'application/json' } });
+        request = await axios.post(`http://${Ipv4}:${process.env.API_PORT}/registerbot`, { Botname: bot.botname, type: bot.type }, { headers: { 'Content-Type': 'application/json' } });
         if (request.status == 200)
             return request.data;
         else
@@ -239,7 +239,7 @@ async function CheckSocketExisted(Username, token, admin, socket, SocketClients)
 
         var request = -1;
         try {
-            request = await axios.post(`http://${Ipv4}:666/check-token`, { username: Username }, { headers: { 'Content-Type': 'application/json', token: token } });
+            request = await axios.post(`http://${Ipv4}:${process.env.API_PORT}/check-token`, { username: Username }, { headers: { 'Content-Type': 'application/json', token: token } });
         }
         catch (Ex) {
             console.log(Ex);
