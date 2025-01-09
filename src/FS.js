@@ -177,7 +177,7 @@ async function AddPlayer(player, SocketClients) {
     SocketClients.NewPlayer.push(player);
     if (!player.Username.includes("Bot")) {
         player.connection.Name = player.Username;
-        await SendMessageToPlayer("Bem vindo " + player.Username, player.connection);
+        await SendMessageToPlayer("Bem vindo " + player.Username, player.connection, "status");
     }
 }
 
@@ -216,7 +216,7 @@ async function CreateLobby(data, SocketClients) {
             SocketClients.NewGame[newLobby.GameLobbyid - 1].statusGame.EstadoJogador = (JSON.parse("[" + json.substring(0, json.length - 1) + "]"));
 
 
-            await SendMessageToPlayer("O jogo vai começar! Estás preparado!", SocketClients.NewPlayer[index].connection);
+            await SendMessageToPlayer("O jogo vai começar! Estás preparado!", SocketClients.NewPlayer[index].connection, "status");
 
         } else
             if (!await CheckIfUserAreHoster(index, SocketClients) && !await CheckIfUserAreOnLobby(data.Username, SocketClients)) {
@@ -224,13 +224,13 @@ async function CreateLobby(data, SocketClients) {
 
                 var request = -1;
 
-                await SendMessageToPlayer("Lobby criado com sucesso " + SocketClients.NewPlayer[index].Username, SocketClients.NewPlayer[index].connection);
+                await SendMessageToPlayer("Lobby criado com sucesso " + SocketClients.NewPlayer[index].Username, SocketClients.NewPlayer[index].connection, "status");
             }
             else
-                await SendMessageToPlayer("Já está em algum lobby", SocketClients.NewPlayer[index].connection);
+                await SendMessageToPlayer("Já está em algum lobby", SocketClients.NewPlayer[index].connection, "status");
     }
     else
-        await SendMessageToPlayer("Erro ao criar lobby", SocketClients.NewPlayer[index].connection);
+        await SendMessageToPlayer("Erro ao criar lobby", SocketClients.NewPlayer[index].connection, "status");
 }
 
 /* Verifica se o Socket já está ligado! */
@@ -269,11 +269,11 @@ async function JoinLobby(Username, idLobby, SocketClients) {
             }
         }
         else
-            SendMessageToPlayer("Já estás num lobby... Não podes entrar em mais que dois lobbys ao mesmo tempo!!", SocketClients.NewPlayer[idPlayer].connection);
+            SendMessageToPlayer("Já estás num lobby... Não podes entrar em mais que dois lobbys ao mesmo tempo!!", SocketClients.NewPlayer[idPlayer].connection, "status");
         // console.log("O user já está em um lobby!");
     }
     else {
-        await SendMessageToPlayer("Erro ao entrar no lobby", socket);
+        await SendMessageToPlayer("Erro ao entrar no lobby", socket, "status");
         SocketClients.NewPlayer[idPlayer].c3
         onnection.intentionalDisconnect = "true";
         SocketClients.NewPlayer[idPlayer].connection.disconnect();
@@ -315,7 +315,7 @@ async function RemovePlayerFromLobby(idPlayer, idLobby, SocketClients) {
 async function DisconnectAllPlayersOfLobby(lobby, SocketClients) {
     lobby.players.forEach(async element => {
         var player = SocketClients.NewPlayer[element];
-        await SendMessageToPlayer("O lobby foi fechado", player.connection);
+        await SendMessageToPlayer("O lobby foi fechado", player.connection, "status");
         player.connection.intentionalDisconnect = "true";
         player.connection.disconnect();
     });
@@ -351,7 +351,7 @@ async function SendToAllPlayers(data, SocketClients) {
 }
 
 // Envia Mensagem a todos os jogadores do lobby!
-async function SendMessageToPlayersOnLobby(lobby, mensagem, SocketClients) {
+async function SendMessageToPlayersOnLobby(lobby, mensagem, SocketClients, EventMitter) {
     lobby.players.forEach(async element => {
         var player = SocketClients.NewPlayer[SocketClients.NewPlayer.findIndex(ws => ws.id == element)];
         // if (!CheckNameAreValid(player.Username)) {
@@ -361,13 +361,13 @@ async function SendMessageToPlayersOnLobby(lobby, mensagem, SocketClients) {
         //     await SendMessageToPlayer(mensagem, player.connection);
         // } else
         if (!player.Username.includes("Bot"))
-            await SendMessageToPlayer(mensagem, player.connection);
+            await SendMessageToPlayer(mensagem, player.connection, EventMitter);
     });
 }
 6
 /* Função para informar um user */
-async function SendMessageToPlayer(data, socket) {
-    socket.emit('status', { content: data });
+async function SendMessageToPlayer(data, socket, EventMitter) {
+    socket.emit(EventMitter, { content: data });
 }
 
 // Função onde o server recebe informações do cliente!
@@ -420,7 +420,7 @@ async function PingPongClient(data, SocketClients) {
 
                 var obstaculos = SocketClients.NewGame[lobby].statusGame.Obstaculos;
 
-                if ((player.distancia > 100 ? player.distancia % 100 : player.distancia) > obstaculos[0].y)
+                if ((player.distancia > 101 ? player.distancia % 100 : player.distancia) > obstaculos[0].y)
                     SocketClients.NewGame[lobby].statusGame.Obstaculos.splice(0, 1);
 
                 if (obstaculos.length == 0) {
@@ -433,7 +433,7 @@ async function PingPongClient(data, SocketClients) {
 
                 if (!alive) {
                     player.Alive = false;
-                    await SendMessageToPlayer("GAME OVER, Você morreu!", SocketClients.NewPlayer[idClient].connection);
+                    await SendMessageToPlayer("GAME OVER, Você morreu!", SocketClients.NewPlayer[idClient].connection, "status");
                     console.log(`O jogador ${player.idPlayer} morreu!`);
                 }
 
@@ -447,9 +447,9 @@ async function PingPongClient(data, SocketClients) {
 
 
                 if (SocketClients.NewPlayer[index].Username.includes("Bot"))
-                    await SendMessageToPlayer({ idBot: idClient, typeBot: SocketClients.NewPlayer[index].typeBot, token: SocketClients.NewPlayer[index].token, obstaculos: SocketClients.NewGame[lobby].statusGame.Obstaculos, x: player.x, y: player.y }, SocketClients.IaApiConnection);
+                    await SendMessageToPlayer({ idBot: idClient, typeBot: SocketClients.NewPlayer[index].typeBot, token: SocketClients.NewPlayer[index].token, obstaculos: SocketClients.NewGame[lobby].statusGame.Obstaculos, x: player.x, y: player.y }, SocketClients.IaApiConnection, "JsonMoves");
                 else
-                    await SendMessageToPlayersOnLobby(SocketClients.NewGame[lobby], json, SocketClients);
+                    await SendMessageToPlayersOnLobby(SocketClients.NewGame[lobby], json, SocketClients, "status");
 
 
             }
@@ -497,13 +497,13 @@ async function OkReadyLobby(data, SocketClients, socketclient, IaApiConnection) 
                 if (lobby.statusGame.JogadorReady == 0) {
                     lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
                     if (SocketClients.NewPlayer[indexuser].connection != undefined)
-                        await SendMessageToPlayer("Para o jogo começar tem de ter pelo menos 1 jogador!", SocketClients.NewPlayer[indexuser].connection);
+                        await SendMessageToPlayer("Para o jogo começar tem de ter pelo menos 1 jogador!", SocketClients.NewPlayer[indexuser].connection, "status");
                 }
                 else {
 
                     lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
 
-                    await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient);//TODO: Checkar porque ele não envia a mensagem para o ultimo utilizador ...
+                    await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient, "status");//TODO: Checkar porque ele não envia a mensagem para o ultimo utilizador ...
 
                     if (lobby.players.length == lobby.statusGame.JogadorReady.length) {
                         let json = ""
@@ -515,7 +515,7 @@ async function OkReadyLobby(data, SocketClients, socketclient, IaApiConnection) 
 
                         SocketClients.NewGame[idLobby].statusGame.Obstaculos = await CriarObstaculos();
 
-                        await SendMessageToPlayersOnLobby(lobby, "Todos os jogadores estão ready! O jogo vai começar!", SocketClients);
+                        await SendMessageToPlayersOnLobby(lobby, "Todos os jogadores estão ready! O jogo vai começar!", SocketClients, "status");
 
                         for (let i = 0; i < SocketClients.NewGame[idLobby].players.length; i++)
 
@@ -523,7 +523,7 @@ async function OkReadyLobby(data, SocketClients, socketclient, IaApiConnection) 
                         var user = SocketClients.NewPlayer[SocketClients.NewPlayer.findIndex(ws => ws.id == idUser)];
 
                         if (user.Username.includes("Bot"))
-                            await SendMessageToPlayer({ idBot: idUser, typeBot: user.typeBot, token: user.token, obstaculos: SocketClients.NewGame[idLobby].statusGame.Obstaculos, x: 10, y: 0 }, IaApiConnection);
+                            await SendMessageToPlayer({ idBot: idUser, typeBot: user.typeBot, token: user.token, obstaculos: SocketClients.NewGame[idLobby].statusGame.Obstaculos, x: 10, y: 0 }, IaApiConnection, "JsonMoves");
                     }
                 }
             }
@@ -544,7 +544,7 @@ async function ReturnListOfLobbys(SocketClients, socket) {
     SocketClients.NewGame.forEach(element => {
         lobbys += lobbys + `id: ${element.idGame}, players: ${element.players.length}/8, Playing: ${element.GameWasStarted}`;
     });
-    await SendMessageToPlayer(lobbys, socket);
+    await SendMessageToPlayer(lobbys, socket, "status");
 }
 
 //#endregion
@@ -610,7 +610,7 @@ async function PingPongClientTeste(data, SocketClients) {
 
                 if (!alive) {
                     player.Alive = false;
-                    await SendMessageToPlayer("Você morreu!", SocketClients.NewPlayer[idClient].connection);
+                    await SendMessageToPlayer("Você morreu!", SocketClients.NewPlayer[idClient].connection, "JsonMoves");
                     console.log(`O jogador ${player.idPlayer} morreu!`);
                 }
                 else {
