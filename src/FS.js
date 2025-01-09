@@ -669,8 +669,7 @@ async function PingPongClientTeste(data, SocketClients) {
 
                 if ((player.distancia > 99 ? player.distancia / 100 : player.distancia) > obstaculos[0].y)
                     SocketClients.NewGame[lobby].statusGame.Obstaculos.splice(0, 1);
-
-                if (obstaculos.length == 0) {
+                else if (obstaculos.length == 0) {
                     //'[{"x":0,"y":0,"tipo":1},{"x":0,"y":10,"tipo":1}]'
                     obstaculos = await CriarObstaculos();
                 }
