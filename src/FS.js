@@ -441,13 +441,11 @@ async function PingPongClient(data, SocketClients) {
 
                 if ((player.distancia > 100 ? player.distancia % 100 : player.distancia) >= obstaculos[0].y)
                     SocketClients.NewGame[lobby].statusGame.Obstaculos.splice(0, 1);
-
-                if (obstaculos.length == 0) {
+                else if (obstaculos.length == 0) {
                     //'[{"x":0,"y":0,"tipo":1},{"x":0,"y":10,"tipo":1}]'
-                    obstaculos = await CriarObstaculos();
-                    SocketClients.NewGame[lobby].statusGame.Obstaculos = obstaculos;
+                    SocketClients.NewGame[lobby].statusGame.Obstaculos = await CriarObstaculos();
                 }
-                else
+
 
 
                     var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);

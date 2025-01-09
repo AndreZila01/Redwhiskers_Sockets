@@ -134,7 +134,6 @@ io.on('connection', function (socket) {
         console.log("" + new Date());
     });
     socket.on('TestJson', async function (data) {
-
         // for (let a = 0; a < 20; a++)
         //     await FS.PingPongClientTeste(data, SocketClients);
         /*.split("\",").forEach(async element => {

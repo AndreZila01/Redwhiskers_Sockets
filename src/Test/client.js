@@ -142,9 +142,7 @@ async function load() {
             case "6":
                 socket.emit('TestObject', { text: `{"Username":"${username}"}` });
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                console.log("TestObject");
-                socket.emit('TestJson', { coordinates: `["up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left"]` });
-                console.log("TestJson");
+                socket.emit('TestJson', { moves: `["up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left"]` });
                 break;
             case "7":
                 socket.emit('NewBot', { text: `{"Bot":"Bot1", "type": 1, "idLobby":0}` });
