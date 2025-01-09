@@ -59,7 +59,7 @@ io.on('connection', function (socket) {
 
     socket.on('NewBot', async function (data) {
         data = JSON.parse(data.text);
-        data.botname = data.Bot.replace(/ /g, '');
+        data.botname = data.botname.replace(/ /g, '');
 
         var result = await FS.AddBot(data, SocketClients);
         if (result != "read ECONNRESET" && result != -1) {

@@ -206,12 +206,12 @@ async function CreateLobby(data, SocketClients) {
     var index = await GetIndexPlayer(data.Username, SocketClients);
     var newLobby = await CreateNewLobby(data.token, SocketClients.NewPlayer[index].id, data.typeLobby)
 
-    if (newLobby != -1 && newLobby != undefined) {
+    if (newLobby !== -1 && newLobby !== undefined) {
         console.log(newLobby);
         console.log(index + " " + newLobby.GameLobbyid);
 
         if (data.typeLobby == "Singleplayer") {
-            SocketClients.NewGame.push({ idGame: newLobby.GameLobbyId, dateTime: newLobby.LobbyCreated, players: [SocketClients.NewPlayer[index].id], GameWasStarted: true, statusGame: { EstadoJogador: [], JogadorReady: [{ index }], Obstaculos: [] } });
+            SocketClients.NewGame.push({ idGame: newLobby.GameLobbyid, dateTime: newLobby.LobbyCreated, players: [SocketClients.NewPlayer[index].id], GameWasStarted: true, statusGame: { EstadoJogador: [], JogadorReady: [{ index }], Obstaculos: [] } });
 
             let json = ""
             SocketClients.NewGame[newLobby.GameLobbyid - 1].players.forEach(element => {
@@ -401,10 +401,23 @@ async function PingPongClient(data, SocketClients) {
         var idLobby = await ReturnWhereIsPlayer(index, SocketClients);
         var lobby = await ReturnIdOfLobby(SocketClients, idLobby);
 
-        if (lobby != -1) {
+        if (lobby !== -1) {
             var player = SocketClients.NewGame[lobby].statusGame.EstadoJogador.find(ws => ws.idPlayer == idClient);
 
-            if (player.Alive && player != undefined) {
+            if (player.Alive && player !== undefined) {
+                // Se o bot tiver coordenadas, ele vai adicionar a lista!
+                if (data.coordinates !== undefined) {
+                    //TODO: CHECK COM O RICARDO: guardar as coordenadas do bot 
+                    let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
+                    SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot = JSON.parse(data.coordinates);
+                }
+
+                // A cada 1 segundo o bot vai mover-se uma casa
+                if (await CheckNameAreValid(SocketClients.NewPlayer[index].Username, false, "OnGame")) {
+                    let idjogador = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
+                    data.move = SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot[0];
+                    SocketClients.NewGame[lobby].statusGame.EstadoJogador[idjogador].Query_Bot.splice(0, 1);
+                }
 
                 if (data.move != undefined || data.move != "" || data.move.toLowerCase() != "wait") {
 
@@ -435,9 +448,9 @@ async function PingPongClient(data, SocketClients) {
                     SocketClients.NewGame[lobby].statusGame.Obstaculos = obstaculos;
                 }
                 else
-                    
 
-                var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
+
+                    var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
 
                 if (!alive) {
                     player.Alive = false;
@@ -493,6 +506,9 @@ async function PingPongClient(data, SocketClients) {
                 SocketClients.NewGame[lobby].statusGame.EstadoJogador.forEach(element => {
                     json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}, \"Alive\": ${element.Alive}},`;
                 });
+
+                json = json.substring(0, json.length - 1) + `],\"Obstaculos\":[${JSON.stringify(obstaculos)}]}`;
+
                 if (SocketClients.NewPlayer[index].Username.includes("Bot"))
                     await SendMessageToPlayer({ idBot: idClient, typeBot: SocketClients.NewPlayer[index].typeBot, token: SocketClients.NewPlayer[index].token, obstaculos: SocketClients.NewGame[lobby].statusGame.Obstaculos, x: player.x, y: player.y }, SocketClients.IaApiConnection, "JsonMoves");
                 else
