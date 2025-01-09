@@ -39,7 +39,7 @@ async function CheckIfUserAreOnLobby(Username, SocketClients) {
 
 //Verifica se o jogador é hoster ou não, retorna true or false
 async function CheckIfUserAreHoster(idUser, SocketClients) {
-    return SocketClients.NewGame.findIndex(ws => ws.players[0].id == idUser) != -1;
+    return SocketClients.NewGame.findIndex(ws => ws.players[0] == idUser) != -1;
 }
 
 //Retorna o id do player
@@ -262,25 +262,29 @@ async function CheckSocketExisted(Username, token, admin, socket, SocketClients)
 
 //Adiciona o jogador ao lobby
 async function JoinLobby(Username, idLobby, SocketClients) {
-    console.log("Username: " + Username + " idLobby: " + idLobby);
-    var idPlayer = SocketClients.NewPlayer[await GetIndexPlayer(Username, SocketClients)].id;
-    console.log("IdPlayer: " + idPlayer + " idLobby: " + idLobby);
-    if (Username != "" && idLobby != undefined && parseInt(idLobby) > -1) {
-        if (!await CheckIfUserAreOnLobby(Username, SocketClients)) {
-            var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
-            if (idGame != -1) {
-                SocketClients.NewGame[idLobby].players.push(idPlayer);
+    try {
+        console.log("Username: " + Username + " idLobby: " + idLobby);
+        var idPlayer = SocketClients.NewPlayer[await GetIndexPlayer(Username, SocketClients)].id;
+        console.log("IdPlayer: " + idPlayer + " idLobby: " + idLobby);
+        if (Username != "" && idLobby != undefined && parseInt(idLobby) > -1) {
+            if (!await CheckIfUserAreOnLobby(Username, SocketClients)) {
+                var idGame = await ReturnIdOfLobby(SocketClients, idLobby);
+                if (idGame != -1) {
+                    SocketClients.NewGame[idLobby].players.push(idPlayer);
+                }
             }
+            else
+                SendMessageToPlayer("Já estás num lobby... Não podes entrar em mais que dois lobbys ao mesmo tempo!!", SocketClients.NewPlayer[idPlayer].connection, "status");
+            // console.log("O user já está em um lobby!");
         }
-        else
-            SendMessageToPlayer("Já estás num lobby... Não podes entrar em mais que dois lobbys ao mesmo tempo!!", SocketClients.NewPlayer[idPlayer].connection, "status");
-        // console.log("O user já está em um lobby!");
-    }
-    else {
-        await SendMessageToPlayer("Erro ao entrar no lobby", socket, "status");
-        SocketClients.NewPlayer[idPlayer].c3
-        onnection.intentionalDisconnect = "true";
-        SocketClients.NewPlayer[idPlayer].connection.disconnect();
+        else {
+            await SendMessageToPlayer("Erro ao entrar no lobby", socket, "status");
+            SocketClients.NewPlayer[idPlayer].c3
+            onnection.intentionalDisconnect = "true";
+            SocketClients.NewPlayer[idPlayer].connection.disconnect();
+        }
+    } catch (Ex) {
+        console.log(Ex);
     }
 
     //TODO: Checkar se lobby existe, se é privado ou não e se está cheio
@@ -430,6 +434,8 @@ async function PingPongClient(data, SocketClients) {
                     obstaculos = await CriarObstaculos();
                     SocketClients.NewGame[lobby].statusGame.Obstaculos = obstaculos;
                 }
+                else
+                    
 
                 var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
 
@@ -440,42 +446,43 @@ async function PingPongClient(data, SocketClients) {
                 }
 
                 if (await CheckIfUserAreHoster(idClient, SocketClients)) {
-                    SocketClients.NewGame[lobby].player.forEach(async element => {
-                        if (await CheckNameAreValid((SocketClients.NewPlayer[element].Username), false, "OnGame")) {
+                    SocketClients.NewGame[lobby].players.forEach(async element => {
+                        var player = SocketClients.NewPlayer.find(ws => ws.id == element);
+                        if (await CheckNameAreValid((player.Username), false, "OnGame")) {
 
                             // let idbot = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == idClient);
-                            let databot = SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].Query_Bot[0];
-                            SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].Query_Bot.splice(0, 1);
+                            let IndexEstado = SocketClients.NewGame[lobby].statusGame.EstadoJogador.findIndex(ws => ws.idPlayer == element);
+                            let databot = JSON.parse(SocketClients.NewGame[lobby].statusGame.EstadoJogador[IndexEstado].Query_Bot)[0];
+                            SocketClients.NewGame[lobby].statusGame.EstadoJogador[IndexEstado].Query_Bot = JSON.stringify(JSON.parse(SocketClients.NewGame[lobby].statusGame.EstadoJogador[IndexEstado].Query_Bot)).splice(0, 1);
 
-                            if (await CheckNameAreValid(SocketClients.NewPlayer[index].Username, false, "OnGame")) {
-                                //#region
+                            //#region
 
-                                if (databot.move != undefined || databot.move != "" || databot.move.toLowerCase() != "wait") {
+                            if (databot.move != undefined && databot.move != "" && databot.move.toLowerCase() != "wait") {
 
-                                    databot.move = "" + databot.move;
+                                databot.move = "" + databot.move;
 
-                                    console.log(`Player: ${player.idPlayer} Move: ${databot.move}`);
-                                    if (databot.move.toLowerCase() == "up" && player.y < 100)
-                                        SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].y += 1;
-                                    else if (databot.move.toLowerCase() == "down" && player.y >= 1)
-                                        SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].y -= 1;
-                                    else if (databot.move.toLowerCase() == "left" && player.x >= 1)
-                                        SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].x -= 1;
-                                    else if (databot.move.toLowerCase() == "right" && player.x < 20)
-                                        SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].x += 1;
+                                console.log(`Player: ${player.idPlayer} Move: ${databot.move}`);
+                                if (databot.move.toLowerCase() == "up" && player.y < 100)
+                                    SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].y += 1;
+                                else if (databot.move.toLowerCase() == "down" && player.y >= 1)
+                                    SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].y -= 1;
+                                else if (databot.move.toLowerCase() == "left" && player.x >= 1)
+                                    SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].x -= 1;
+                                else if (databot.move.toLowerCase() == "right" && player.x < 20)
+                                    SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].x += 1;
 
-                                }
-                                SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].distancia++;
-
-                                var obstaculos = SocketClients.NewGame[lobby].statusGame.Obstaculos;
-
-                                var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
-                                if (!alive) {
-                                    player.Alive = false;//TODO: Fazer alguma coisa quando os bots morrerem!
-                                    await SendMessageToPlayer("GAME OVER, Você morreu!", SocketClients.NewPlayer[idClient].connection);
-                                    console.log(`O jogador ${player.idPlayer} morreu!`);
-                                }
                             }
+                            SocketClients.NewGame[lobby].statusGame.EstadoJogador[element].distancia++;
+
+                            var obstaculos = SocketClients.NewGame[lobby].statusGame.Obstaculos;
+
+                            var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
+                            if (!alive) {
+                                player.Alive = false;//TODO: Fazer alguma coisa quando os bots morrerem!
+                                await SendMessageToPlayer("GAME OVER, Você morreu!", SocketClients.NewPlayer[idClient].connection);
+                                console.log(`O jogador ${player.idPlayer} morreu!`);
+                            }
+
                         }
                         //#endregion
 
@@ -540,7 +547,6 @@ async function OkReadyLobby(data, SocketClients, socketclient, IaApiConnection) 
                         await SendMessageToPlayer("Para o jogo começar tem de ter pelo menos 1 jogador!", SocketClients.NewPlayer[indexuser].connection, "status");
                 }
                 else {
-
                     lobby.statusGame.JogadorReady.push({ idPlayer: idUser, ready: true });
 
                     await SendMessageToPlayer("Você está ready no servidor! A espera de resposta do Admin", socketclient, "status");//TODO: Checkar porque ele não envia a mensagem para o ultimo utilizador ...
