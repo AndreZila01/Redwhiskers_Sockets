@@ -43,7 +43,7 @@ io.on('connection', function (socket) {
         if (await FS.CheckNameAreValid(data.Username, data.Admin, "StartGame"))
             s = await FS.CheckSocketExisted(data.Username, data.token, false, socket, SocketClients);
         else {
-            await FS.SendMessageToPlayer("Nome de jogador inválido", socket);
+            await FS.SendMessageToPlayer("Nome de jogador inválido", socket, "status");
             socket.intentionalDisconnect = "false";
             socket.disconnect();
         }
@@ -51,7 +51,7 @@ io.on('connection', function (socket) {
         if (s.length !== 0)
             await FS.AddPlayer(s[0], SocketClients);
         else {
-            await FS.SendMessageToPlayer("Já existe um jogador com esse nome ou ip", socket);
+            await FS.SendMessageToPlayer("Já existe um jogador com esse nome ou ip", socket, "status");
             socket.intentionalDisconnect = "false";
             socket.disconnect();
         }
@@ -71,7 +71,7 @@ io.on('connection', function (socket) {
             await FS.OkReadyLobby({ Username: result.botname, idLobby: data.idLobby }, SocketClients, socket, IASocket); // IASocket == undefined ? socket : IASocket
         }
         else {
-            await FS.SendMessageToPlayer("Problemas a criar o bot tente novamente!", socket);
+            await FS.SendMessageToPlayer("Problemas a criar o bot tente novamente!", socket, "status");
             console.log("Problemas a criar o bot tente novamente!");
         }
     });

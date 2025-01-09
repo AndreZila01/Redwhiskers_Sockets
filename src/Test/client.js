@@ -91,7 +91,7 @@ async function load() {
             case "0":
                 var email = prompt("Digite o seu email: ").replace("\n", "").replace("\r", "").replace("\r\n", "").replace(/ /g, '');
                 var password = encrypt(prompt("Digite a senha: ").replace("\n", "").replace("\r", "").replace("\r\n", "").replace(/ /g, ''));
-                var request = await axios.post(`http://${process.env.IPV4Test}:666/register`, { username: username, email: email, password: password }, { headers: { 'Content-Type': 'application/json' } });
+                var request = await axios.post(`http://${process.env.Ipv4}:666/register`, { username: username, email: email, password: password }, { headers: { 'Content-Type': 'application/json' } });
                 if (request.status == 200)
                     console.log("Conta criada com sucesso!");
                 else
@@ -105,7 +105,7 @@ async function load() {
             case "1":
                 try {
                     var password = encrypt(prompt("Digite a senha: ").replace("\n", "").replace("\r", "").replace("\r\n", "").replace(/ /g, ''));
-                    var request = await axios.post(`http://${process.env.IPV4Test}:666/login`, { username: username, password: password }, { headers: { 'Content-Type': 'application/json' } });
+                    var request = await axios.post(`http://${process.env.Ipv4}:666/login`, { username: username, password: password }, { headers: { 'Content-Type': 'application/json' } });
                     console.log(request.statusText);
                     token = request.headers.authorization;
                     socket.emit('NewPlayer', { text: `{"Username":"${username}", "token":"${token}"}` });
