@@ -55,7 +55,7 @@ async function FindSocket(socket, Username, SocketClients) {
 //Cria um lobby e retorna dados do lobby
 async function CreateNewLobby(tokenHoster, idHoster, typeLobby) {
     try {
-        let request = await axios.post(`http://${Ipv4}:3005/registLobby`, { LobbyCreated: new Date, token: tokenHoster, GameWasStarted: (typeLobby == "Singleplayer" ? true : false), idHoster: idHoster, typeLobby: typeLobby }, { headers: { 'Content-Type': 'application/json' } });
+        let request = await axios.post(`http://${Ipv4}:${process.env.API_PORT}/registLobby`, { LobbyCreated: new Date, token: tokenHoster, GameWasStarted: (typeLobby === "Singleplayer" ? true : false), idHoster: idHoster, typeLobby: typeLobby }, { headers: { 'Content-Type': 'application/json' } });
         if (request.status == 200)
             return request.data;
         else
@@ -74,7 +74,11 @@ async function ReturnIdOfLobby(SocketClients, idLobby) {
 // Retorna o lobby onde o jogador está
 async function ReturnWhereIsPlayer(indexPlayer, SocketClients) {
     let idPlayer = SocketClients.NewPlayer[indexPlayer].id;
-    return SocketClients.NewGame.findIndex(ws => ws.players.includes(idPlayer));
+    let whereIsPlayer = SocketClients.NewGame.findIndex(ws => {
+        let result = ws.players.includes(idPlayer)
+        return result;
+    });
+    return SocketClients.NewGame[whereIsPlayer].idGame;
 }
 
 // Verificar o nome do utilizador
@@ -136,6 +140,8 @@ async function checkColider(obstaculos, player, EstadoJogador) {
     //obstaculo 1x1 tipo 1
     //obstaculo 1x2 tipo 2
     //obstaculo 2x1 tipo 3
+    if (!player.Alive)
+        return false;
 
     let distx, disty;
     switch (obstaculos[0].tipo) {
@@ -187,7 +193,7 @@ async function AddPlayer(player, SocketClients) {
 
 async function AddBot(bot, SocketClients) {
     try {
-        request = await axios.post(`http://${Ipv4}:3005/registerbot`, { Botname: bot.botname, type: bot.type }, { headers: { 'Content-Type': 'application/json' } });
+        request = await axios.post(`http://${Ipv4}:${process.env.API_PORT}/registerbot`, { Botname: bot.botname, type: bot.type }, { headers: { 'Content-Type': 'application/json' } });
         if (request.status == 200)
             return request.data;
         else
@@ -243,7 +249,7 @@ async function CheckSocketExisted(Username, token, admin, socket, SocketClients)
 
         var request = -1;
         try {
-            request = await axios.post(`http://${Ipv4}:3005/check-token`, { username: Username }, { headers: { 'Content-Type': 'application/json', token: token } });
+            request = await axios.post(`http://${Ipv4}:${process.env.API_PORT}/check-token`, { username: Username }, { headers: { 'Content-Type': 'application/json', token: token } });
         }
         catch (Ex) {
             console.log(Ex);
@@ -439,16 +445,14 @@ async function PingPongClient(data, SocketClients) {
 
                 var obstaculos = SocketClients.NewGame[lobby].statusGame.Obstaculos;
 
-                if ((player.distancia > 100 ? player.distancia % 100 : player.distancia) >= obstaculos[0].y)
-                    SocketClients.NewGame[lobby].statusGame.Obstaculos.splice(0, 1);
-                else if (obstaculos.length == 0) {
+                if (obstaculos.length == 0) {
                     //'[{"x":0,"y":0,"tipo":1},{"x":0,"y":10,"tipo":1}]'
-                    SocketClients.NewGame[lobby].statusGame.Obstaculos = await CriarObstaculos();
-                }
+                    obstaculos = await CriarObstaculos();
+                    SocketClients.NewGame[lobby].statusGame.Obstaculos = obstaculos;
+                } else if ((player.distancia > 100 ? player.distancia % 100 : player.distancia) >= obstaculos[0].y)
+                    SocketClients.NewGame[lobby].statusGame.Obstaculos.splice(0, 1);
 
-
-
-                    var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
+                var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
 
                 if (!alive) {
                     player.Alive = false;
@@ -500,12 +504,13 @@ async function PingPongClient(data, SocketClients) {
                     });
                 }
 
-                var json = "{\"players\":[";
+                let json = { players: [], Obstaculos: [] };
+
                 SocketClients.NewGame[lobby].statusGame.EstadoJogador.forEach(element => {
-                    json += `{\"idPlayer\":${element.idPlayer}, \"x\":${element.x}, \"y\":${element.y}, \"distancia\":${element.distancia}, \"personagem\":${element.personagem}, \"powerups\":${element.powerups}, \"Alive\": ${element.Alive}},`;
+                    json.players.push({ idPlayer: element.idPlayer, x: element.x, y: element.y, distancia: element.distancia, personagem: element.personagem, powerups: element.powerups, Alive: element.Alive });
                 });
 
-                json = json.substring(0, json.length - 1) + `],\"Obstaculos\":[${JSON.stringify(obstaculos)}]}`;
+                json.Obstaculos = obstaculos;
 
                 if (SocketClients.NewPlayer[index].Username.includes("Bot"))
                     await SendMessageToPlayer({ idBot: idClient, typeBot: SocketClients.NewPlayer[index].typeBot, token: SocketClients.NewPlayer[index].token, obstaculos: SocketClients.NewGame[lobby].statusGame.Obstaculos, x: player.x, y: player.y }, SocketClients.IaApiConnection, "JsonMoves");
