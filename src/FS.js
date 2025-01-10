@@ -452,10 +452,6 @@ async function PingPongClient(data, SocketClients) {
                 }else if ((player.distancia > 100 ? player.distancia % 100 : player.distancia) >= obstaculos[0].y)
                     SocketClients.NewGame[lobby].statusGame.Obstaculos.splice(0, 1);
 
-
-                else
-
-
                 var alive = await checkColider(obstaculos, player, SocketClients.NewGame[lobby].statusGame.EstadoJogador);
 
                 if (!alive) {
